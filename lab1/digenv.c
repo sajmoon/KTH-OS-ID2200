@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <syslog.h>
 
 pid_t fork_errors() {
     pid_t pid = fork();
@@ -13,6 +13,9 @@ pid_t fork_errors() {
         printf("forking error");
         exit(1);
     }
+    openlog("test", LOG_CONS, LOG_LOCAL1);
+
+    syslog(LOG_INFO, "pid %d", pid);
     return pid;
 }
 
@@ -28,6 +31,9 @@ void prepare_receive_pipe(int pipe[2]) {
     close(pipe[0]);    /* close excess fildes                  */
 }
 
+/*
+
+*/
 char *get_pager() {
     char * value;
 
