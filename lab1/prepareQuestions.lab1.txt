@@ -1,0 +1,20 @@
+Förberedelsefrågor:
+
+3.3
+
+1.
+
+På ubuntudatorerna i Spelhallen: /sbin/init
+
+2.
+
+en barnprocess får när den skapas de envvariables som gäller just då. De kan inte kommunicera fram eller tillbaka med dom senare.
+
+3.
+Det går inte. När vi försöker binda SIGKILL med  if(signal(SIGKILL, ourSignalHandler) == SIG_ERR) så får vi ett fel.
+
+Det går dock med andra, t ex sigint.
+
+4.
+För att man ska kunna hålla reda på om man är i en child process eller i parent.
+Forkar man 4ggr i rad så får man 4a 0 i rad av fork, sen en ny pID.
