@@ -28,6 +28,18 @@ void prepare_receive_pipe(int pipe[2]) {
     close(pipe[0]);    /* close excess fildes                  */
 }
 
+char *get_pager() {
+    char * value;
+
+    value = getenv ("PAGER");
+    if (! value) {
+        return "less";
+    }
+    else {
+        return value;
+    }
+}
+
 /* utan parametrar ska digenv fungera som printev | sort | less 
 pager ska vara less om inte envvar PAGER är satt till något annat
 
@@ -66,20 +78,24 @@ int main(int argc, char **argv, char **envp)
             //printf("%s", join_arguments(argc, argv));
             //exit(1);
             //execlp("/bin/grep","grep", join_arguments(argc, argv), NULL);
-            execvp("/bin/grep", argv);
-
-            perror("något briljant");
-            _exit(1);
-
+            if (argc > 1) {
+                execvp("grep", argv);
+                perror("Grep failed");
+                _exit(0);
+            }
         }
         
         prepare_receive_pipe(sort_pipe);
         prepare_send_pipe(pager_pipe);
         execlp("/usr/bin/sort","sort",NULL);
+        perror("Sorting failed");
+        _exit(1);
 
     } else {
         prepare_receive_pipe(pager_pipe);
-        execlp("/usr/bin/less","less",NULL);
+        execlp(get_pager(),get_pager(),NULL);
+        perror("Invalid pager"); 
+        _exit(1);
     }
 
     //printf("exiting %d", pid);
