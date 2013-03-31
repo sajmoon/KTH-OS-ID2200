@@ -6,64 +6,82 @@
 #include <unistd.h>
 
 
+pid_t fork_errors() {
+    pid_t pid = fork();
+
+    if (pid < 0){
+        printf("forking error");
+        exit(1);
+    }
+    return pid;
+}
+
+void prepare_send_pipe(int pipe[2]) {
+    close(pipe[0]); 
+    dup2(pipe[1],1);
+    close(pipe[1]);
+}
+
+void prepare_receive_pipe(int pipe[2]) {
+    close(pipe[1]);    /* close write end of pipe              */
+    dup2(pipe[0],0);   /* make 0 same as read-from end of pipe */
+    close(pipe[0]);    /* close excess fildes                  */
+}
+
 /* utan parametrar ska digenv fungera som printev | sort | less 
 pager ska vara less om inte envvar PAGER är satt till något annat
 
  */
 int main(int argc, char **argv, char **envp)
 {
-
-    int     fd[2];
-    int     envToSort[2];
+    int     pager_pipe[2];
+    pipe(pager_pipe);
     
-    char    readbuffer[2256];
-    pipe(fd);
+    pid_t sort_pid = fork_errors();
 
-    pid_t   pID = fork();
+    if (sort_pid == 0 ) {
 
-    if (pID == 0 ) {
-        // child
-        int pID2 = fork();
+        int sort_pipe[2];
+        pipe(sort_pipe);
 
-        if (pID2 == 0) {
-            close(fd[0]);
-            dup2(fd[1],1);
-            close(fd[1]);
-            execlp("printenv","printenv",NULL);
-            perror("demo");       /* still around?  exec failed           */
-            _exit(1);             /* no flush  */  
-        } else {
-            close(fd[1]);    /* close write end of pipe              */
-            dup2(fd[0],0);   /* make 0 same as read-from end of pipe */
-            close(fd[0]);    /* close excess fildes                  */
+        pid_t grep_pid = fork_errors();
 
+        if (grep_pid == 0 ) {
+            int grep_pipe[2];
+            pipe(grep_pipe);
 
+            pid_t env_pid = fork_errors();
+
+            if (env_pid == 0) {
+                // child pager
+                prepare_send_pipe(grep_pipe);
+                execlp("printenv","printenv",NULL);
+                perror("errror");       /* still around?  exec failed           */
+                _exit(1);
+            }
+
+            // parent  
+            prepare_receive_pipe(grep_pipe);
+            prepare_send_pipe(sort_pipe);
+            //printf("%s", join_arguments(argc, argv));
+            //exit(1);
+            //execlp("/bin/grep","grep", join_arguments(argc, argv), NULL);
+            execvp("/bin/grep", argv);
+
+            perror("något briljant");
+            _exit(1);
 
         }
+        
+        prepare_receive_pipe(sort_pipe);
+        prepare_send_pipe(pager_pipe);
+        execlp("/usr/bin/sort","sort",NULL);
 
-        close(fd[0]);
-        dup2(fd[1],1);
-        close(fd[1]);
-        execlp("printenv","printenv",NULL);
-        perror("demo");       /* still around?  exec failed           */
-        _exit(1);             /* no flush    */
-
-        int     i;
-        char    status[1];
-
-    } else if (pID < 0) {
-        //error
-        printf("some error in forking");
-        return 1;
     } else {
-        // parent
-        close(fd[1]);    /* close write end of pipe              */
-        dup2(fd[0],0);   /* make 0 same as read-from end of pipe */
-        close(fd[0]);    /* close excess fildes                  */
+        prepare_receive_pipe(pager_pipe);
         execlp("/usr/bin/less","less",NULL);
-
     }
 
-    printf("exiting %d", pID);
+    //printf("exiting %d", pid);
     return EXIT_SUCCESS;
 }
