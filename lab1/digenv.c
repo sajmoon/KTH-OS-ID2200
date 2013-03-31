@@ -13,18 +13,24 @@ pid_t fork_errors() {
         printf("forking error");
         exit(1);
     }
-    openlog("test", LOG_CONS, LOG_LOCAL1);
-
+    // Prints a log message with the pid so we can track if a process is not killed
+    openlog("digenv", LOG_CONS, LOG_LOCAL1);
     syslog(LOG_INFO, "pid %d", pid);
     return pid;
 }
 
+/*
+helper method to lock the read part of the pipe
+*/
 void prepare_send_pipe(int pipe[2]) {
     close(pipe[0]); 
     dup2(pipe[1],1);
     close(pipe[1]);
 }
 
+/* 
+helper method to close the write part of the pipe
+*/
 void prepare_receive_pipe(int pipe[2]) {
     close(pipe[1]);    /* close write end of pipe              */
     dup2(pipe[0],0);   /* make 0 same as read-from end of pipe */
@@ -32,7 +38,8 @@ void prepare_receive_pipe(int pipe[2]) {
 }
 
 /*
-
+    returns the current pager as defined by env variables
+    or less
 */
 char *get_pager() {
     char * value;
@@ -46,9 +53,11 @@ char *get_pager() {
     }
 }
 
-/* utan parametrar ska digenv fungera som printev | sort | less 
-pager ska vara less om inte envvar PAGER är satt till något annat
-
+/* 
+    Works as printenv | sort | less
+    if we have defined pager in env variabels then use that pager.
+    if we define parameters digenv works as:
+    ./digenv [params] -> printenv | grep params | sort | less
  */
 int main(int argc, char **argv, char **envp)
 {
@@ -78,14 +87,14 @@ int main(int argc, char **argv, char **envp)
                 _exit(1);
             }
 
-            // parent  
             prepare_receive_pipe(grep_pipe);
             prepare_send_pipe(sort_pipe);
-            //printf("%s", join_arguments(argc, argv));
-            //exit(1);
-            //execlp("/bin/grep","grep", join_arguments(argc, argv), NULL);
+            
             if (argc > 1) {
+                // runs the binary "grep" with the arguments in argv
                 execvp("grep", argv);
+
+                // if it fails this message is printed.
                 perror("Grep failed");
                 _exit(0);
             }
@@ -93,13 +102,19 @@ int main(int argc, char **argv, char **envp)
         
         prepare_receive_pipe(sort_pipe);
         prepare_send_pipe(pager_pipe);
+        // runs the sort binary with to parameters but with piped input
         execlp("/usr/bin/sort","sort",NULL);
+
+        // failure message
         perror("Sorting failed");
         _exit(1);
 
     } else {
         prepare_receive_pipe(pager_pipe);
+        // runs the specified pager with input from pipe
         execlp(get_pager(),get_pager(),NULL);
+
+        // failure message
         perror("Invalid pager"); 
         _exit(1);
     }
