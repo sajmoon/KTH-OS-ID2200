@@ -1,12 +1,43 @@
+/*
+ Operating systems - ID2200 KTH
+ Lab 1: Pipelines
 
+ ========== digenv.c ==========
+ Produces a result similar to:
+ 
+ $ printenv | grep [args] | sort | $PAGER
+
+ with a default value of $PAGER=/usr/bin/less
+
+ Authors:
+ Simon Ström <simstr@kth.se>
+ Mattis Kancans Envall <mattiske@kth.se>
+
+ For a more detailed task description, please see:
+  http://www.imit.kth.se/courses/2G1520/COURSELIB/labs/pipelab.pdf 
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <stdbool.h>
+#include <errno.h>
 
-pid_t fork_errors() {
+/* Pipe constants */
+#define READ        0
+#define WRITE       1 
+/* Pipe names */
+#define DIGENV       0
+#define GREP        1
+#define SORT        2
+#define PIPE_COUNT  3
+
+/* global pipes? */
+int pipes[PIPE_COUNT][2];
+
+bool safe_fork() {
     pid_t pid = fork();
 
     if (pid < 0){
@@ -16,31 +47,29 @@ pid_t fork_errors() {
     // Prints a log message with the pid so we can track if a process is not killed
     openlog("digenv", LOG_CONS, LOG_LOCAL1);
     syslog(LOG_INFO, "pid %d", pid);
-    return pid;
+    return pid == 0;
 }
 
 /*
 helper method to lock the read part of the pipe
 */
-void prepare_send_pipe(int pipe[2]) {
-    close(pipe[0]); 
-    dup2(pipe[1],1);
-    close(pipe[1]);
+void prepare_send_pipe(int pipe) {
+    close(pipes[pipe][READ]);
+    dup2 (pipes[pipe][WRITE], 1);
+    close(pipes[pipe][WRITE]);
 }
 
 /* 
 helper method to close the write part of the pipe
 */
-void prepare_receive_pipe(int pipe[2]) {
-    close(pipe[1]);    /* close write end of pipe              */
-    dup2(pipe[0],0);   /* make 0 same as read-from end of pipe */
-    close(pipe[0]);    /* close excess fildes                  */
+void receive_from_pipe(int pipe) {
+    close(pipes[pipe][WRITE]);    /* close write end of pipe              */
+    dup2 (pipes[pipe][READ], 0);  /* make 0 same as read-from end of pipe */
+    close(pipes[pipe][READ]);     /* close excess fildes                  */
 }
 
-/*
-    returns the current pager as defined by env variables
-    or less
-*/
+/*  returns the current pager as defined by env variables
+    or "less"  */
 char *get_pager() {
     char * value;
 
@@ -54,71 +83,65 @@ char *get_pager() {
 }
 
 /* 
-    Works as printenv | sort | less
-    if we have defined pager in env variabels then use that pager.
+    With no arguments specified: works as printenv | sort | less
+    if we have defined pager in env variabels, that pager is used instead of less
     if we define parameters digenv works as:
     ./digenv [params] -> printenv | grep params | sort | less
  */
 int main(int argc, char **argv, char **envp)
 {
-    int     pager_pipe[2];
-    pipe(pager_pipe);
-    
-    pid_t sort_pid = fork_errors();
+    /* true for childprocesses after each fork */
+    bool isChild;
 
-    if (sort_pid == 0 ) {
+    pipe(pipes[DIGENV]);
 
-        int sort_pipe[2];
-        pipe(sort_pipe);
+    isChild = safe_fork();
+    if ( isChild ) {
+        // child pager
+        prepare_send_pipe(DIGENV);
+        execlp("printenv","printenv",NULL);
+        perror("errror");       /* still around?  exec failed           */
+        _exit(EXIT_FAILURE);
+    }
 
-        pid_t grep_pid = fork_errors();
+    receive_from_pipe(DIGENV);
 
-        if (grep_pid == 0 ) {
-            int grep_pipe[2];
-            pipe(grep_pipe);
+    pipe(pipes[GREP]);
 
-            pid_t env_pid = fork_errors();
-
-            if (env_pid == 0) {
-                // child pager
-                prepare_send_pipe(grep_pipe);
-                execlp("printenv","printenv",NULL);
-                perror("errror");       /* still around?  exec failed           */
-                _exit(1);
-            }
-
-            prepare_receive_pipe(grep_pipe);
-            prepare_send_pipe(sort_pipe);
-            
-            if (argc > 1) {
+    isChild = safe_fork();
+    if ( isChild ) {
+        prepare_send_pipe(GREP);
+        if (argc > 1) {
                 // runs the binary "grep" with the arguments in argv
                 execvp("grep", argv);
 
-                // if it fails this message is printed.
+                // if we get here, grep has failed.
                 perror("Grep failed");
-                _exit(0);
-            }
-        }
-        
-        prepare_receive_pipe(sort_pipe);
-        prepare_send_pipe(pager_pipe);
+                _exit(EXIT_FAILURE);
+        } 
+        //else: No grep due to no arguments
+    }
+    receive_from_pipe(GREP);
+
+    pipe(pipes[SORT]);
+
+    isChild = safe_fork();
+    if ( isChild ) {
+        prepare_send_pipe(SORT);
         // runs the sort binary with to parameters but with piped input
         execlp("/usr/bin/sort","sort",NULL);
 
-        // failure message
+        // If we get here, call to sort has failed.
         perror("Sorting failed");
-        _exit(1);
-
-    } else {
-        prepare_receive_pipe(pager_pipe);
-        // runs the specified pager with input from pipe
-        execlp(get_pager(),get_pager(),NULL);
-
-        // failure message
-        perror("Invalid pager"); 
-        _exit(1);
+        _exit(EXIT_FAILURE);
     }
+    receive_from_pipe(SORT);
+    
+    // runs the specified pager with input from pipe
+    execlp(get_pager(),get_pager(),NULL);
 
-    //printf("exiting %d", pid);
-    return EXIT_SUCCESS;
+    // if we get here, pager has failed.
+    perror("Invalid pager"); 
+    _exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
 }
