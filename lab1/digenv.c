@@ -51,7 +51,7 @@ bool safe_fork() {
 }
 
 /*
-helper method to lock the read part of the pipe
+Helper method to lock the read part of the pipe
 */
 void prepare_send_pipe(int pipe) {
     close(pipes[pipe][READ]);
@@ -60,7 +60,7 @@ void prepare_send_pipe(int pipe) {
 }
 
 /* 
-helper method to close the write part of the pipe
+Helper method to close the write part of the pipe
 */
 void receive_from_pipe(int pipe) {
     close(pipes[pipe][WRITE]);    /* close write end of pipe              */
@@ -74,12 +74,7 @@ char *get_pager() {
     char * value;
 
     value = getenv ("PAGER");
-    if (! value) {
-        return "less";
-    }
-    else {
-        return value;
-    }
+    return (value) ? value : "less";
 }
 
 /* 
