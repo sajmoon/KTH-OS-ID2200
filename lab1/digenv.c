@@ -29,7 +29,7 @@
 #define READ        0
 #define WRITE       1 
 /* Pipe names */
-#define DIGENV       0
+#define DIGENV      0
 #define GREP        1
 #define SORT        2
 #define PIPE_COUNT  3
@@ -95,7 +95,7 @@ int main(int argc, char **argv, char **envp)
         // child pager
         prepare_send_pipe(DIGENV);
         execlp("printenv","printenv",NULL);
-        perror("errror");       /* still around?  exec failed           */
+        perror("errror");       /* still around?  exec failed  */
         _exit(EXIT_FAILURE);
     }
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv, char **envp)
     if ( isChild ) {
         prepare_send_pipe(GREP);
         if (argc > 1) {
-                // runs the binary "grep" with the arguments in argv
+        // runs the binary "grep" with the arguments in argv
                 execvp("grep", argv);
 
                 // if we get here, grep has failed.
@@ -123,7 +123,7 @@ int main(int argc, char **argv, char **envp)
     isChild = safe_fork();
     if ( isChild ) {
         prepare_send_pipe(SORT);
-        // runs the sort binary with to parameters but with piped input
+    // runs the sort binary with to parameters but with piped input
         execlp("/usr/bin/sort","sort",NULL);
 
         // If we get here, call to sort has failed.
@@ -133,7 +133,7 @@ int main(int argc, char **argv, char **envp)
     receive_from_pipe(SORT);
     
     // runs the specified pager with input from pipe
-    execlp(get_pager(),get_pager(),NULL);
+    execlp(get_pager(), get_pager(), NULL);
 
     // if we get here, pager has failed.
     perror("Invalid pager"); 
