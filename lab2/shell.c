@@ -13,17 +13,20 @@ void prompt() {
 int main(int argc, char **argv, char **envp)
 {
   char* input = NULL;
-  prompt();
 
-  size_t size = 70;
-  getline(&input, &size, stdin);
-  
-  input[strlen(input) - 1] = 0;
-
-  if (strcmp(input, "exit") == 0) {
-    return EXIT_SUCCESS;
-  } else {
+  while(1==1) {
     prompt();
+
+    size_t size = 70;
+    getline(&input, &size, stdin);
+    
+    input[strlen(input) - 1] = 0;
+
+    if (strcmp(input, "exit") == 0) {
+      return EXIT_SUCCESS;
+    } else {
+      execlp(input, input, NULL);
+    }
   }
   return EXIT_SUCCESS;
 }
