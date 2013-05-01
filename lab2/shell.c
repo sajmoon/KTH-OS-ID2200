@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <sys/types.h>
+#include <sys/resource.h>
 #include <ctype.h>
 
 /* Pipe constants */
@@ -47,6 +48,30 @@ void print_usage() {
   printf("usage:");
 }
 
+char** tokenize(const char* input) {
+    char* str = strdup(input);
+    int count = 0;
+    int capacity = 10;
+    char** result = malloc(capacity*sizeof(*result));
+
+    char* tok=strtok(str," "); 
+
+    while(1)
+    {
+        if (count >= capacity)
+            result = realloc(result, (capacity*=2)*sizeof(*result));
+
+        result[count++] = tok? strdup(tok) : tok;
+
+        if (!tok) break;
+
+        tok=strtok(NULL," ");
+    } 
+
+    free(str);
+    return result;
+}
+
 void runCommand(char *input) {
     pid_t pid = fork();
 
@@ -56,7 +81,9 @@ void runCommand(char *input) {
     } else if (pid == 0) {
       //Child
       
-      if (execlp(input, input, NULL) < 0) {
+      char** args = tokenize(input);
+
+      if (execvp(args[0], args) < 0) {
         printf("ERROR in execlp \n");
         exit(1);
       }
@@ -70,10 +97,6 @@ void runCommand(char *input) {
 
 int main(int argc, char **argv, char **envp)
 {
-
-  // signal(SIGINT, SIG_IGN);
-  // signal(SIGINT, handle_signal);
-  
   char* input = NULL;
 
   while(1) {
@@ -91,6 +114,8 @@ int main(int argc, char **argv, char **envp)
     } else {
       int pipe = 0;
       
+      signal(SIGINT, SIG_IGN);
+      signal(SIGINT, handle_signal);
       runCommand(input);
 
  
