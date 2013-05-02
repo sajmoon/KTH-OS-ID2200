@@ -84,22 +84,22 @@ bool is_background(char ** args) {
       return true;
     }
   }
-
   return false;
 }
 
 void runCommand(char *input) {
-  pid_t pid     = fork();
-  char ** args  = NULL;
-  args          = tokenize(input);
-  bool bg       = is_background(args);
+  pid_t pid;
+  char ** args;
+  bool bg;
+
+  pid   = fork();
+  args  = tokenize(input);
+  bg    = is_background(args);
 
   if (pid < 0) {
     /* error */
   } else if (pid == 0) {
     /* Child */
-    
-    
     if (execvp(args[0], args) < 0) {
       printf("ERROR in execlp \n");
       exit(1);
@@ -110,7 +110,6 @@ void runCommand(char *input) {
       free(args);
     }
 
-
   } else {
     /* parent */
     if (!bg) {
@@ -119,11 +118,11 @@ void runCommand(char *input) {
       free(args);
     }
   }
-
 }
 
 int main(int argc, char **argv, char **envp)
 {
+  size_t size = 70;
   char* input = NULL;
 
   signal(SIGINT, SIG_IGN);
@@ -132,7 +131,6 @@ int main(int argc, char **argv, char **envp)
   while(1) {
     prompt();
 
-    size_t size = 70;
     getline(&input, &size, stdin);
     
     if (strcmp(input, "\n")==0) {
@@ -146,6 +144,12 @@ int main(int argc, char **argv, char **envp)
     if (strcmp(input, "exit") == 0) {
       printf("Good bye! ttyl\n");
       return EXIT_SUCCESS;
+
+    } else if (strcmp(input, "cd") == 0) {
+      char ** args = NULL;
+      args = tokenize(input);
+      chdir(args[1]);
+      free(args);
     } else {
       runCommand(input);
       print_usage();
