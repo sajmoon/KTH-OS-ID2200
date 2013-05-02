@@ -81,14 +81,12 @@ bool is_background(char ** args) {
   for (i = 0; i < 9; i++) {
     if (args[i] == NULL)
       return false;
-    if (strcmp(args[i], "&\n")==0) {
-      printf("YAAAAAAAAAAAA\n");
-      fflush(stdout);
+    if (strcmp(args[i], "&")==0) {
+      args[i] = "";
       return true;
     }
   }
 
-  printf("vi är inte bg");
   fflush(stdout);
   return false;
 }
