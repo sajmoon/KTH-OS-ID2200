@@ -79,9 +79,8 @@ bool is_background(char ** args) {
   int i;
 
   for (i = 0; i < 9; i++) {
-    printf("asdf\n");
-    printf("args[%d] = '%s'\n", i, args[i]);
-    fflush(stdout);
+    if (args[i] == NULL)
+      return false;
     if (strcmp(args[i], "&\n")==0) {
       printf("YAAAAAAAAAAAA\n");
       fflush(stdout);
