@@ -99,10 +99,11 @@ void runCommand(char ** args) {
 
   if (pid < 0) {
     /* error */
+    printf("Error in forking. We should check this out.");
   } else if (pid == 0) {
     /* Child */
     if (execvp(args[0], args) < 0) {
-      printf("ERROR in execlp \n");
+      printf("Could not find program or it failed in some way\n");
       exit(1);
     }
     
