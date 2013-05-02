@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/resource.h>
+#include <sys/wait.h>
 #include <ctype.h>
 
 /* Pipe constants */
@@ -45,7 +46,7 @@ void handle_signal(int signo)
 }
 
 void print_usage() {
-  printf("usage:");
+  printf("usage:\n");
 }
 
 char** tokenize(const char* input) {
@@ -72,17 +73,44 @@ char** tokenize(const char* input) {
     return result;
 }
 
+bool is_background(char ** args) {
+  printf("Bajs\n");
+  fflush(stdout);
+  int i;
+
+  for (i = 0; i < 9; i++) {
+    printf("asdf\n");
+    printf("args[%d] = '%s'\n", i, args[i]);
+    fflush(stdout);
+    if (strcmp(args[i], "&\n")==0) {
+      printf("YAAAAAAAAAAAA\n");
+      fflush(stdout);
+      return true;
+    }
+  }
+
+  printf("vi är inte bg");
+  fflush(stdout);
+  return false;
+}
+
 void runCommand(char *input) {
     pid_t pid = fork();
     char ** args = NULL;
+    args = tokenize(input);
+    int len = strlen(*args);
+    bool bg = is_background(args);
+
+    printf("bg: %d", bg);
     if (pid < 0) {
       // error
       //
     } else if (pid == 0) {
       //Child
       
-      args = tokenize(input);
+      if (bg) {
 
+      }
       if (execvp(args[0], args) < 0) {
         printf("ERROR in execlp \n");
         exit(1);
@@ -90,8 +118,12 @@ void runCommand(char *input) {
 
     } else {
       // parent
-      int status;
-      while (wait(&status) != pid);       /* wait for completion  HITTAD DEN RAD ONLINE */
+      if (!bg) {
+        printf("bg is for pussies\n");
+        int status;
+        while (wait(&status) != pid);       /* wait for completion  HITTAD DEN RAD ONLINE */
+      }
+
     }
 }
 
@@ -105,19 +137,18 @@ int main(int argc, char **argv, char **envp)
     size_t size = 70;
     getline(&input, &size, stdin);
     printf("\n");
-    print_usage();
+    
     
     input[strlen(input) - 1] = 0;
 
     if (strcmp(input, "exit") == 0) {
       return EXIT_SUCCESS;
     } else {
-      int pipe = 0;
-      
-      signal(SIGINT, SIG_IGN);
-      signal(SIGINT, handle_signal);
+      //signal(SIGINT, SIG_IGN);
+      //signal(SIGINT, handle_signal);
       runCommand(input);
-
+      print_usage();
+      prompt();
  
     }
   }

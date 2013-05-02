@@ -1,4 +1,4 @@
-all: lab2
+all: lab2-ansi
 
 lab2: shell.c
 	gcc -Wall shell.c -o shell.o
