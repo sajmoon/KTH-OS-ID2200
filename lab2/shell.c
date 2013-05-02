@@ -74,14 +74,14 @@ char** tokenize(const char* input) {
 
 void runCommand(char *input) {
     pid_t pid = fork();
-
+    char ** args = NULL;
     if (pid < 0) {
       // error
       //
     } else if (pid == 0) {
       //Child
       
-      char** args = tokenize(input);
+      args = tokenize(input);
 
       if (execvp(args[0], args) < 0) {
         printf("ERROR in execlp \n");
