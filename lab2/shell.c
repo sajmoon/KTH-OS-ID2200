@@ -11,6 +11,7 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <ctype.h>
+#include <unistd.h> /* to get current working directory */
 
 /* Pipe constants */
 #define READ        0
@@ -22,7 +23,9 @@ typedef void (*sighandler_t)(int);
 int pipes[PIPE_COUNT][2];
 
 void prompt() {
-  fputs("\n>> ", stdout);
+  char cwd[2014];
+  getcwd(cwd, sizeof(cwd));
+  printf("\n %s >> ", cwd);
   fflush(stdout);
 }
 
@@ -87,13 +90,11 @@ bool is_background(char ** args) {
   return false;
 }
 
-void runCommand(char *input) {
+void runCommand(char ** args) {
   pid_t pid;
-  char ** args;
   bool bg;
 
   pid   = fork();
-  args  = tokenize(input);
   bg    = is_background(args);
 
   if (pid < 0) {
@@ -124,6 +125,7 @@ int main(int argc, char **argv, char **envp)
 {
   size_t size = 70;
   char* input = NULL;
+  char ** args = NULL;
 
   signal(SIGINT, SIG_IGN);
   signal(SIGINT, handle_signal);
@@ -140,18 +142,20 @@ int main(int argc, char **argv, char **envp)
     printf("\n");
     
     input[strlen(input) - 1] = 0;
-
-    if (strcmp(input, "exit") == 0) {
+    
+    args  = tokenize(input);
+    
+    if (strcmp(args[0], "exit") == 0) {
       printf("Good bye! ttyl\n");
       return EXIT_SUCCESS;
 
-    } else if (strcmp(input, "cd") == 0) {
+    } else if (strcmp(args[0], "cd") == 0) {
       char ** args = NULL;
       args = tokenize(input);
       chdir(args[1]);
       free(args);
     } else {
-      runCommand(input);
+      runCommand(args);
       print_usage();
  
     }
