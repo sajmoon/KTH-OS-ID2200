@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -32,7 +33,7 @@ bool safe_fork() {
         printf("forking error");
         exit(1);
     }
-    // Prints a log message with the pid so we can track if a process is not killed
+    /* Prints a log message with the pid so we can track if a process is not killed */
     openlog("Simons och mattis shell", LOG_CONS, LOG_LOCAL1);
     syslog(LOG_INFO, "pid %d", pid);
     return pid == 0;
@@ -41,8 +42,7 @@ bool safe_fork() {
 /* Block Ctrl-C */
 void handle_signal(int signo)
 {
-	printf("\n Ctrl-C");
-	fflush(stdout);
+  prompt();
 }
 
 void print_usage() {
@@ -89,38 +89,36 @@ bool is_background(char ** args) {
 }
 
 void runCommand(char *input) {
-    pid_t pid     = fork();
-    char ** args  = NULL;
-    args          = tokenize(input);
-    int len       = strlen(*args);
-    bool bg       = is_background(args);
+  pid_t pid     = fork();
+  char ** args  = NULL;
+  args          = tokenize(input);
+  bool bg       = is_background(args);
 
-    if (pid < 0) {
-      // error
-      //
-    } else if (pid == 0) {
-      //Child
-      
-      
-      if (execvp(args[0], args) < 0) {
-        printf("ERROR in execlp \n");
-        exit(1);
-      }
-      
-      if (bg) {
-        // should the child do something special when its in bg mode?
-        free(args);
-      }
-
-
-    } else {
-      // parent
-      if (!bg) {
-        int status;
-        while (wait(&status) != pid);       /* wait for completion  HITTAD DEN RAD ONLINE */
-        free(args);
-      }
+  if (pid < 0) {
+    /* error */
+  } else if (pid == 0) {
+    /* Child */
+    
+    
+    if (execvp(args[0], args) < 0) {
+      printf("ERROR in execlp \n");
+      exit(1);
     }
+    
+    if (bg) {
+      /* should the child do something special when its in bg mode? */
+      free(args);
+    }
+
+
+  } else {
+    /* parent */
+    if (!bg) {
+      int status;
+      while (wait(&status) != pid);       /* wait for completion  HITTAD DEN RAD ONLINE */
+      free(args);
+    }
+  }
 
 }
 
@@ -128,6 +126,9 @@ int main(int argc, char **argv, char **envp)
 {
   char* input = NULL;
 
+  signal(SIGINT, SIG_IGN);
+  signal(SIGINT, handle_signal);
+  
   while(1) {
     prompt();
 
@@ -143,10 +144,9 @@ int main(int argc, char **argv, char **envp)
     input[strlen(input) - 1] = 0;
 
     if (strcmp(input, "exit") == 0) {
+      printf("Good bye! ttyl\n");
       return EXIT_SUCCESS;
     } else {
-      //signal(SIGINT, SIG_IGN);
-      //signal(SIGINT, handle_signal);
       runCommand(input);
       print_usage();
  
