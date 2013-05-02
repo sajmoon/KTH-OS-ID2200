@@ -53,7 +53,7 @@ char** tokenize(const char* input) {
     char* str = strdup(input);
     int count = 0;
     int capacity = 10;
-    char** result = malloc(capacity*sizeof(*result));
+    char** result = malloc(capacity*sizeof(char));
 
     char* tok=strtok(str," "); 
 
@@ -74,54 +74,54 @@ char** tokenize(const char* input) {
 }
 
 bool is_background(char ** args) {
-  printf("Bajs\n");
-  fflush(stdout);
   int i;
-
+  
   for (i = 0; i < 9; i++) {
     if (args[i] == NULL)
       return false;
     if (strcmp(args[i], "&")==0) {
-      args[i] = "";
+      args[i] = NULL;
       return true;
     }
   }
 
-  fflush(stdout);
   return false;
 }
 
 void runCommand(char *input) {
-    pid_t pid = fork();
-    char ** args = NULL;
-    args = tokenize(input);
-    int len = strlen(*args);
-    bool bg = is_background(args);
+    pid_t pid     = fork();
+    char ** args  = NULL;
+    args          = tokenize(input);
+    int len       = strlen(*args);
+    bool bg       = is_background(args);
 
-    printf("bg: %d", bg);
     if (pid < 0) {
       // error
       //
     } else if (pid == 0) {
       //Child
       
-      if (bg) {
-
-      }
+      
       if (execvp(args[0], args) < 0) {
         printf("ERROR in execlp \n");
         exit(1);
       }
+      
+      if (bg) {
+        // should the child do something special when its in bg mode?
+        free(args);
+      }
+
 
     } else {
       // parent
       if (!bg) {
-        printf("bg is for pussies\n");
         int status;
         while (wait(&status) != pid);       /* wait for completion  HITTAD DEN RAD ONLINE */
+        free(args);
       }
-
     }
+
 }
 
 int main(int argc, char **argv, char **envp)
@@ -133,8 +133,12 @@ int main(int argc, char **argv, char **envp)
 
     size_t size = 70;
     getline(&input, &size, stdin);
-    printf("\n");
     
+    if (strcmp(input, "\n")==0) {
+      printf("Try entering a command. Exit is a good one. Give it a try!");
+      continue;
+    }
+    printf("\n");
     
     input[strlen(input) - 1] = 0;
 
@@ -145,7 +149,6 @@ int main(int argc, char **argv, char **envp)
       //signal(SIGINT, handle_signal);
       runCommand(input);
       print_usage();
-      prompt();
  
     }
   }
