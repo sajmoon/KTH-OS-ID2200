@@ -90,6 +90,10 @@ bool is_background(char ** args) {
   return false;
 }
 
+void print_pid(pid_t pid) {
+  printf("[PID: %d]\n\n", pid);
+}
+
 void runCommand(char ** args) {
   pid_t pid;
   bool bg;
@@ -102,6 +106,7 @@ void runCommand(char ** args) {
     printf("Error in forking. We should check this out.");
   } else if (pid == 0) {
     /* Child */
+
     if (execvp(args[0], args) < 0) {
       printf("Could not find program or it failed in some way\n");
       exit(1);
@@ -116,7 +121,10 @@ void runCommand(char ** args) {
     /* parent */
     if (!bg) {
       int status;
+      print_pid(pid);
       while (wait(&status) != pid);       /* wait for completion  HITTAD DEN RAD ONLINE */
+
+      print_pid(pid);
       free(args);
     }
   }
