@@ -4,7 +4,11 @@
 #include <errno.h> 
 #include <sys/mman.h>
 
-#define NALLOC 1024                                     /* minimum #units to request */
+#define NALLOC          1024                             /* minimum #units to request */
+#define MAP_ANONYMOUS   32
+
+int getpagesize(void);
+void perror(char*);
 
 typedef long Align;                                     /* for alignment to long boundary */
 

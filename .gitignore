@@ -21,3 +21,8 @@
 *.log*.swp
 *.swp
 *.loc
+
+lab3/t[0-5]
+
+#emacs backups:
+\#*\#
