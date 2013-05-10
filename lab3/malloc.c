@@ -123,7 +123,7 @@ void * malloc(size_t nbytes)
     }
     if(p == freep)                                      /* wrapped around free list */
       if((p = morecore(nunits)) == NULL)
-	  return NULL;                                        /* none left */
+	      return NULL;                                    /* none left */
   }
 }
 
