@@ -1,16 +1,22 @@
-    p->s.size += bp->s.size;
-    p->s.ptr = bp->s.ptr;
 #include "brk.h"
 #include <unistd.h>
 #include <string.h> 
 #include <errno.h> 
+#include <stdio.h>
 #include <sys/mman.h>
 
 #define NALLOC          1024                             /* minimum #units to request */
 #define MAP_ANONYMOUS   32
 
-int getpagesize(void);
-void perror(char*);
+#define STRATEGY_FIRST  1
+#define STRATEGY_BEST   2
+
+
+
+void print(char* message){
+  /*
+    fprintf(stderr, "%s\n", message);//*/
+}
 
 typedef long Align;                                     /* for alignment to long boundary */
 
@@ -81,14 +87,16 @@ static Header *morecore(unsigned nu)
   Header *up;
 #ifdef MMAP
   unsigned noPages;
-  if(__endHeap == 0) __endHeap = sbrk(0);
+  if(__endHeap == 0) __endHeap = sbrk(0);              /* Returns the current value of the program break */
 #endif
-
+  
+  /* we need to allocate atleast NALLOC amount of new space */
   if(nu < NALLOC)
     nu = NALLOC;
 #ifdef MMAP
   noPages = ((nu*sizeof(Header))-1)/getpagesize() + 1;
-  cp = mmap(__endHeap, noPages*getpagesize(), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  /* void *mmap(void *addr,     size_t lenght,         int prot,               int flags,              int fd, off_t offset) */
+  cp =     mmap(__endHeap,      noPages*getpagesize(), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,  -1,     0);
   nu = (noPages*getpagesize())/sizeof(Header);
   __endHeap += noPages*getpagesize();
 #else
@@ -103,9 +111,9 @@ static Header *morecore(unsigned nu)
   free((void *)(up+1));
   return freep;
 }
-
-void * malloc(size_t nbytes)
-{
+  
+void * malloc(size_t nbytes) {
+  print("Malloc!");
   Header *p, *prevp;
   Header * morecore(unsigned);
   unsigned nunits;
@@ -118,21 +126,63 @@ void * malloc(size_t nbytes)
     base.s.ptr = freep = prevp = &base;
     base.s.size = 0;
   }
-  for(p= prevp->s.ptr;  ; prevp = p, p = p->s.ptr) {
-    if(p->s.size >= nunits) {                           /* big enough */
-      if (p->s.size == nunits)                          /* exactly */
-        prevp->s.ptr = p->s.ptr;
-      else {                                            /* allocate tail end */
-      	p->s.size -= nunits;
-      	p += p->s.size;
-      	p->s.size = nunits;
+
+#if STRATEGY == STRATEGY_BEST
+
+  Header * best = NULL;
+  for(p = prevp->s.ptr ; ; prevp = p, p = p->s.ptr){
+    print("looping");
+    if( p->s.size >= nunits ){
+      if(p->s.size == nunits) {
+        return (void *)(p+1);
+      } else { /* if bigger */
+        if( best == NULL || best->s.size - p->s.size > 0){
+          best = p;
+        }
       }
-      freep = prevp;
-      return (void *)(p+1);
     }
+    if(p == freep){
+      if(best != NULL) {
+        print("best found");
+        break;
+      }
+      print("morecore");
+      if((p = morecore(nunits)) == NULL)
+        return NULL;                                    /* none left */
+    }
+  }
+  /* p.size är för stor, minska den så den passar*/
+  fprintf(stderr, "size of p: %d", p->s.size);
+  
+  Header rest;
+  rest->s.size
+  best->s.size = nunits * sizeof(Header);
+  
+
+
+
+
+  #endif
+
+#if STRATEGY == STRATEGY_FIRST
+  fprintf(stderr, "Fail - first fit");
+    for(p= prevp->s.ptr;  ; prevp = p, p = p->s.ptr) {
+      if(p->s.size >= nunits) {                           /* big enough */
+        if (p->s.size == nunits)                          /* exactly */
+          prevp->s.ptr = p->s.ptr;
+        else {                                            /* allocate tail end */
+          p->s.size -= nunits;
+          p += p->s.size;
+          p->s.size = nunits;
+        }
+        freep = prevp;
+        return (void *)(p+1);
+
     if(p == freep)                                      /* wrapped around free list */
       if((p = morecore(nunits)) == NULL)
         return NULL;                                    /* none left */
   }
+
+  #endif
 }
 
