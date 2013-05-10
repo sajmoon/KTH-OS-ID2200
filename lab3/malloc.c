@@ -1,3 +1,5 @@
+    p->s.size += bp->s.size;
+    p->s.ptr = bp->s.ptr;
 #include "brk.h"
 #include <unistd.h>
 #include <string.h> 
@@ -25,6 +27,7 @@ typedef union header Header;
 static Header base;                                     /* empty list to get started */
 static Header *freep = NULL;                            /* start of free list */
 
+
 /* free: put block ap in the free list */
 
 void free(void * ap)
@@ -34,23 +37,29 @@ void free(void * ap)
   if(ap == NULL) return;                                /* Nothing to do */
 
   bp = (Header *) ap - 1;                               /* point to block header */
-  for(p = freep; !(bp > p && bp < p->s.ptr); p = p->s.ptr)
+  for(p = freep; !(bp > p && bp < p->s.ptr); p = p->s.ptr) 
     if(p >= p->s.ptr && (bp > p || bp < p->s.ptr))
       break;                                            /* freed block at atrt or end of arena */
 
   if(bp + bp->s.size == p->s.ptr) {                     /* join to upper nb */
+
+    /* Om bp direkt efterföljs av ett tomt block 
+       som kan konsumeras: */
     bp->s.size += p->s.ptr->s.size;
     bp->s.ptr = p->s.ptr->s.ptr;
   }
   else
     bp->s.ptr = p->s.ptr;
+
   if(p + p->s.size == bp) {                             /* join to lower nbr */
-    p->s.size += bp->s.size;
+  /* Om det inte finns något mellan p och bp: */
+    p->s.size += bp->s.size; 
     p->s.ptr = bp->s.ptr;
   } else
     p->s.ptr = bp;
   freep = p;
 }
+
 
 /* morecore: ask system for more memory */
 
@@ -112,18 +121,18 @@ void * malloc(size_t nbytes)
   for(p= prevp->s.ptr;  ; prevp = p, p = p->s.ptr) {
     if(p->s.size >= nunits) {                           /* big enough */
       if (p->s.size == nunits)                          /* exactly */
-	prevp->s.ptr = p->s.ptr;
+        prevp->s.ptr = p->s.ptr;
       else {                                            /* allocate tail end */
-	p->s.size -= nunits;
-	p += p->s.size;
-	p->s.size = nunits;
+      	p->s.size -= nunits;
+      	p += p->s.size;
+      	p->s.size = nunits;
       }
       freep = prevp;
       return (void *)(p+1);
     }
     if(p == freep)                                      /* wrapped around free list */
       if((p = morecore(nunits)) == NULL)
-	return NULL;                                    /* none left */
+        return NULL;                                    /* none left */
   }
 }
 
