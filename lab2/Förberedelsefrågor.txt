@@ -1,0 +1,13 @@
+Motivera varför det ofta är bra att exekvera kommandon i en separat process.
+
+Ifall kommandot t.ex. fastnar i en oändlig loop eller gör något som användaren inte tänkt sig, så kan man ifall kommandot körs i en separat process avbryta programmet utan att hela shellet terminerar. Annars blir detta mycket svårare.
+
+Vad händer om man inte i kommandotolken exekverar wait() för en barn-process som avslutas?
+
+wait, waitpid - Vänta på att en barnprocess stannar eller dör. Ifall detta inte görs så kommer shellet ignorera barnet, varför man inte vet om barnet dör cleant eller ej.
+
+Hur skall man utläsa SIGSEGV?
+
+Varför kan man inte blockera SIGKILL?
+
+  
