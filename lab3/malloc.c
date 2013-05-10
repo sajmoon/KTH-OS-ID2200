@@ -7,6 +7,9 @@
 #define NALLOC          1024                             /* minimum #units to request */
 #define MAP_ANONYMOUS   32
 
+#define STRATEGY_FIRST  1
+#define STRATEGY_BEST   2
+
 int getpagesize(void);
 void perror(char*);
 
@@ -111,21 +114,27 @@ void * malloc(size_t nbytes)
     base.s.ptr = freep = prevp = &base;
     base.s.size = 0;
   }
-  for(p= prevp->s.ptr;  ; prevp = p, p = p->s.ptr) {
-    if(p->s.size >= nunits) {                           /* big enough */
-      if (p->s.size == nunits)                          /* exactly */
-	      prevp->s.ptr = p->s.ptr;
-      else {                                            /* allocate tail end */
-      	p->s.size -= nunits;
-      	p += p->s.size;
-      	p->s.size = nunits;
+  
+  # if STRATEGY == STRATEGY_FIRST
+    for(p= prevp->s.ptr;  ; prevp = p, p = p->s.ptr) {
+      if(p->s.size >= nunits) {                           /* big enough */
+        if (p->s.size == nunits)                          /* exactly */
+          prevp->s.ptr = p->s.ptr;
+        else {                                            /* allocate tail end */
+          p->s.size -= nunits;
+          p += p->s.size;
+          p->s.size = nunits;
+        }
+        freep = prevp;
+        return (void *)(p+1);
       }
-      freep = prevp;
-      return (void *)(p+1);
+      if(p == freep)                                      /* wrapped around free list */
+        if((p = morecore(nunits)) == NULL)
+          return NULL;                                    /* none left */
     }
-    if(p == freep)                                      /* wrapped around free list */
-      if((p = morecore(nunits)) == NULL)
-	      return NULL;                                    /* none left */
-  }
+  #endif
+
+  #if STRATEGY == STRATEGY_BEST
+  #endif
 }
 
