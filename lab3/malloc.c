@@ -72,14 +72,16 @@ static Header *morecore(unsigned nu)
   Header *up;
 #ifdef MMAP
   unsigned noPages;
-  if(__endHeap == 0) __endHeap = sbrk(0);
+  if(__endHeap == 0) __endHeap = sbrk(0);              /* Returns the current value of the program break */
 #endif
-
+  
+  /* we need to allocate atleast NALLOC amount of new space */
   if(nu < NALLOC)
     nu = NALLOC;
 #ifdef MMAP
   noPages = ((nu*sizeof(Header))-1)/getpagesize() + 1;
-  cp = mmap(__endHeap, noPages*getpagesize(), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  /* void *mmap(void *addr, size_t lenght,         int prot,               int flags,                   int fd, off_t offset) */
+  cp =     mmap(__endHeap,      noPages*getpagesize(), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,  -1,     0);
   nu = (noPages*getpagesize())/sizeof(Header);
   __endHeap += noPages*getpagesize();
 #else
