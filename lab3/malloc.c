@@ -12,10 +12,8 @@
 #define STRATEGY_BEST   2
 
 
-
-void print(char* message){
-  /*
-    fprintf(stderr, "%s\n", message);//*/
+void print(char* message, long value){  
+    fprintf(stderr, "%s: %ld\n", message, value);
 }
 
 typedef long Align;                                     /* for alignment to long boundary */
@@ -113,7 +111,7 @@ static Header *morecore(unsigned nu)
 }
   
 void * malloc(size_t nbytes) {
-  print("Malloc!");
+  
   Header *p, *prevp;
   Header * morecore(unsigned);
   unsigned nunits;
@@ -128,44 +126,48 @@ void * malloc(size_t nbytes) {
   }
 
 #if STRATEGY == STRATEGY_BEST
+  Header *best = NULL,
+         *prevbest = NULL;
 
-  Header * best = NULL;
   for(p = prevp->s.ptr ; ; prevp = p, p = p->s.ptr){
-    print("looping");
     if( p->s.size >= nunits ){
       if(p->s.size == nunits) {
+        prevp->s.ptr = p->s.ptr;  /* remove prefect fit from freelist */
         return (void *)(p+1);
       } else { /* if bigger */
-        if( best == NULL || best->s.size - p->s.size > 0){
+        if( best == NULL || best->s.size > p->s.size){
           best = p;
+          prevbest = prevp;
         }
       }
     }
     if(p == freep){
-      if(best != NULL) {
-        print("best found");
+      if(best != NULL)
         break;
-      }
-      print("morecore");
+      
       if((p = morecore(nunits)) == NULL)
-        return NULL;                                    /* none left */
+        return NULL;                                   /* none left */
     }
   }
   /* p.size är för stor, minska den så den passar*/
-  fprintf(stderr, "size of p: %d", p->s.size);
+  fprintf(stderr, "size of best: %d \n", best->s.size);
   
   Header rest;
-  rest->s.size
+  rest.s.size = best->s.size - nunits * sizeof(Header);
+  rest.s.ptr = best->s.ptr;
   best->s.size = nunits * sizeof(Header);
+  best->s.ptr = &rest;
+  prevbest->s.ptr = &rest;
   
 
+  fprintf(stderr, "size of best: %d \n", best->s.size);
 
-
-
+  show();
+  return (void*)(best+1);
   #endif
 
 #if STRATEGY == STRATEGY_FIRST
-  fprintf(stderr, "Fail - first fit");
+  fprintf(stderr, "Fail - next fit");
     for(p= prevp->s.ptr;  ; prevp = p, p = p->s.ptr) {
       if(p->s.size >= nunits) {                           /* big enough */
         if (p->s.size == nunits)                          /* exactly */
@@ -186,3 +188,23 @@ void * malloc(size_t nbytes) {
   #endif
 }
 
+void show(){
+  print("======= SHOW =======", 0);
+  Header *p, *prevp;
+
+  print("freep is", (long)freep);
+  print("    size", freep->s.size);
+  print("    ptr ", (long)freep->s.ptr);
+  int mittis = 0;
+  for(p=freep->s.ptr; ;prevp = p, p = p->s.ptr){
+    if(p == freep || mittis++ == 40)
+      break;
+    print("pointer ", (long)p);
+    print("    size", p->s.size);
+    print("    ptr ", (long)p->s.ptr);
+  }
+  if(mittis == 40)
+    print("ERROR - no pointer back to freep", 1);
+
+  print("====================", 0);
+}
