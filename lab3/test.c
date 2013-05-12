@@ -12,32 +12,31 @@ void printAdd(void*a) {
 
 void simpleMallocTest1() {
   print("simpleMallocTest1", 0);
-  void *a = malloc(1024);
-  show("simpleMallocTest1:");
+  void *a = malloc(10);
+  show("simpleMallocTest1:", 0);
   free(a);
   print("simpleMallocTest1 passed.");
 }
 
 void simpleReallocTest() {
   print("simpleReallocTest1", 0);
-	void *a  = malloc(1024);
+	void *a  = malloc(10);
   //printAdd(a);
 	
-  void *b  = malloc(1024);
+  void *b  = malloc(10);
   //printAdd(b);
-	
-  realloc(a, 2048);
+	show("alloced 2*10");
+  a = realloc(a, 30);
   //printAdd(a);
 
   show("test after malloc and realloc");
   
   free(a);
-  
   free(b);
   show("test after free");
 }
 
-simpleMallocTest2() {
+void simpleMallocTest2() {
   print("simpleMallocTest2", 0);
   void *a1 = malloc(10);
   void *a2 = malloc(10);
@@ -69,6 +68,7 @@ simpleMallocTest2() {
   show("removed all but one datablock");
   free(a9);
   show("remove all");
+  show("should be empty");
 }
 
 
