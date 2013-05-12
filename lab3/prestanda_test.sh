@@ -4,7 +4,7 @@ then
   rm testFile
 fi
 
-gcc -DSTRATEGY -Wall -o testFile testPrestanda.c malloc.c 2> compilation.log
+gcc -DSTRATEGY=2 -Wall -o testFile testPrestanda.c malloc.c 2> compilation.log
 if [ $? -eq 0 ]
 then
   
