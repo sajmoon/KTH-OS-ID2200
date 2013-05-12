@@ -17,6 +17,7 @@ unsigned bytesToHeaderUnits(size_t);
 void free(void*);
 void * malloc(size_t );
 void * realloc(void* , size_t);
+int getpagesize(void);
 
 void print(char* message, long value){  
     fprintf(stderr, "%s: %ld\n", message, value);
@@ -39,46 +40,25 @@ static Header *freep = NULL;                            /* start of free list */
 
 
 void show(char* msg){
+  /* for debug perposes only */
   fprintf(stderr, "========= %s ========\n", msg);
-  Header *p, *prevp;
+  Header *p;
 
   print("freep  ", (long)freep);
   print("   size", freep->s.size);
   print("   pntr", (long)freep->s.ptr);
-  int mittis = 0;
-  for(p=freep->s.ptr; ;prevp = p, p = p->s.ptr){
-    if(p == freep || ++mittis == 40)
+
+  for(p=freep->s.ptr; ;p = p->s.ptr){
+    if(p == freep)
       break;
     print("pointer", (long)p);
     fprintf(stderr, "   size: %d\n", p->s.size);
     print("   pntr", (long)p->s.ptr);
   }
-  if(mittis == 40)
-    print("ERROR - no pointer back to freep", 1);
 
   print("====================", 0);
 }
 
-void showStats() {
-  Header *p, *prevp;
-  int pCount = 0;
-  int freeSize = 0;
-
-  for(p=freep->s.ptr; ;prevp = p, p = p->s.ptr){
-    if(p == freep)
-      break;
-    pCount++;
-    freeSize += p->s.size;
-  }
-  if (pCount > 1) {
-    fprintf(stderr, "pCount: %d\n", pCount);
-    fprintf(stderr, "freeSize: %d\n", freeSize);
-    fprintf(stderr, "avg size: %d\n", (freeSize/pCount));
-
-
-    fprintf(stderr, "========= END!! ========\n");
-  }
-}
 
 
 void * realloc(void* ptr, size_t size){
@@ -227,7 +207,7 @@ void * malloc(size_t nbytes) {
 
   print("best", (long) best );*/
 
-  Header *rest = (long)(best) + (nunits)*sizeof(Header);
+  Header *rest = (Header *)((long)best + (nunits)*sizeof(Header));
   rest->s.size = best->s.size - nunits;
   rest->s.ptr = best->s.ptr;
 
