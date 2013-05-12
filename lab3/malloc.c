@@ -53,6 +53,27 @@ void show(char* msg){
   print("====================", 0);
 }
 
+void showStats() {
+  Header *p, *prevp;
+  int pCount = 0;
+  int freeSize = 0;
+
+  for(p=freep->s.ptr; ;prevp = p, p = p->s.ptr){
+    if(p == freep)
+      break;
+    pCount++;
+    freeSize += p->s.size;
+  }
+  if (pCount > 1) {
+    fprintf(stderr, "pCount: %d\n", pCount);
+    fprintf(stderr, "freeSize: %d\n", freeSize);
+    fprintf(stderr, "avg size: %d\n", (freeSize/pCount));
+
+
+    fprintf(stderr, "========= END!! ========\n");
+  }
+}
+
 
 /* free: put block ap in the free list */
 
@@ -188,6 +209,8 @@ void * malloc(size_t nbytes) {
     freep = prevbest;
 
   /*show("post");*/
+  showStats();
+
   return (void*)(best+1);
   #endif
 
