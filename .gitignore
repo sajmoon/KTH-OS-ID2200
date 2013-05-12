@@ -22,7 +22,7 @@
 *.swp
 *.loc
 
-lab3/t[0-5]
+lab3/t[0-9]
 
 #emacs backups:
 \#*\#
