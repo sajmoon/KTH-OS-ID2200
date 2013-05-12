@@ -1,14 +1,14 @@
 #!/bin/bash
-if [ -x testFile ]
+if [ -x a.out ]
 then
   rm testFile
 fi
 
-gcc -DSTRATEGY=2 -Wall -o testFile testPrestanda.c malloc.c 2> compilation.log
+gcc -DSTRATEGY=2 -pg -Wall testPrestanda.c malloc.c
 if [ $? -eq 0 ]
 then
   
-  time ./testFile >> prestanda.log
+  ./a.out
 else
   echo "Compilation failed"
 fi
