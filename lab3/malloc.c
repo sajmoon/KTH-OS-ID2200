@@ -4,6 +4,7 @@
 #include <errno.h> 
 #include <stdio.h>
 #include <sys/mman.h>
+#include <math.h>
 
 #define NALLOC          1024                             /* minimum #units to request */
 #define MAP_ANONYMOUS   32
@@ -89,12 +90,18 @@ void * realloc(void* ptr, size_t size){
     return NULL;
   }
 
-  Header * bp = (Header*) ptr;
+  Header * hp = ((Header*) ptr)-1;
 
   void *newHome = malloc(size);
-  memcpy(newHome, ptr, bp->s.size*sizeof(Header));
+  
+  unsigned cpysize1 = (hp->s.size-1)*sizeof(Header);
+
+  
+  cpysize1 = (size < cpysize1)? size: cpysize1;
+  
+  memcpy(newHome, ptr, cpysize1);
   free(ptr);
-  show("realloc");
+  
   return newHome;
 }
 
@@ -230,9 +237,6 @@ void * malloc(size_t nbytes) {
 
   if(best == freep)
     freep = prevbest;
-
-  show("malloc");
-  /*showStats();*/
 
   return (void*)(best+1);
   #endif
