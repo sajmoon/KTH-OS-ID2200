@@ -10,23 +10,85 @@ void printAdd(void*a) {
   print("Adress",(long)a);
 }
 
-void simpleMallocTest() {
+void simpleMallocTest1() {
+  print("simpleMallocTest1", 0);
   void *a = malloc(1024);
-  
-  printAdd((void *)a);  
+  show("simpleMallocTest1:");
   free(a);
 }
 
 void simpleReallocTest() {
+  print("simpleReallocTest1", 0);
 	void *a  = malloc(1024);
-	void *b  = malloc(1024);
-	realloc(a, 2048);
+  //printAdd(a);
+	
+  void *b  = malloc(1024);
+  //printAdd(b);
+	
+  realloc(a, 2048);
+  //printAdd(a);
+
+  show("test after malloc and realloc");
+  
+  free(a);
+  
+  free(b);
+  show("test after free");
+}
+
+simpleMallocTest2() {
+  print("simpleMallocTest2", 0);
+  void *a1 = malloc(10);
+  void *a2 = malloc(10);
+  void *a3 = malloc(10);
+  void *a4 = malloc(10);
+  void *a5 = malloc(10);
+  void *a6 = malloc(10);
+  void *a7 = malloc(10);
+  void *a8 = malloc(10);
+  void *a9 = malloc(10);
+  
+  free(a2);
+  free(a4);
+  free(a6);
+  free(a8);
+
+  show("sparsly malloc");
+
+  free(a3);
+
+  show("see if it has merged 1,2 and 3 into a bigger block");
+
+  free(a1);
+
+  
+  free(a5);
+  free(a7);
+
+  show("removed all but one datablock");
+  free(a9);
+  show("remove all");
+}
+
+void simpleFreeTest1() {
+  print("simpleFreeTest1", 0);
+  void *a = malloc(10);
+  show("malloc once, noting freed");
+  
+  print("free twice", 0);
+  free(a);
+  free(a);
+
+  show("free stuff that hasnt been allocated");
 }
 
 int main(int argc, char const *argv[]) {
   
-  simpleMallocTest();
-  /*simpleReallocTest();/**/
+  simpleFreeTest1();
+  simpleMallocTest1();
+  simpleMallocTest2();
+  simpleReallocTest();
+
 
 	return 0;
 }
