@@ -15,6 +15,7 @@ void simpleMallocTest1() {
   void *a = malloc(1024);
   show("simpleMallocTest1:");
   free(a);
+  print("simpleMallocTest1 passed.");
 }
 
 void simpleReallocTest() {
@@ -70,21 +71,10 @@ simpleMallocTest2() {
   show("remove all");
 }
 
-void simpleFreeTest1() {
-  print("simpleFreeTest1", 0);
-  void *a = malloc(10);
-  show("malloc once, noting freed");
-  
-  print("free twice", 0);
-  free(a);
-  free(a);
-
-  show("free stuff that hasnt been allocated");
-}
 
 int main(int argc, char const *argv[]) {
   
-  simpleFreeTest1();
+  
   simpleMallocTest1();
   simpleMallocTest2();
   simpleReallocTest();
