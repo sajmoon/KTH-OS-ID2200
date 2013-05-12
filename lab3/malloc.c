@@ -13,6 +13,9 @@
 
 unsigned bytesToHeaderUnits(size_t);
 
+void free(void*);
+void * malloc(size_t );
+void * realloc(void* , size_t);
 
 void print(char* message, long value){  
     fprintf(stderr, "%s: %ld\n", message, value);
@@ -77,7 +80,7 @@ void showStats() {
 }
 
 
-void realloc(void* ptr, size_t size){
+void * realloc(void* ptr, size_t size){
   /* basfall */
   if(ptr == NULL)
     return malloc(size);
@@ -87,28 +90,6 @@ void realloc(void* ptr, size_t size){
   }
 
   Header * bp = (Header*) ptr;
-  unsigned nunits = bytesToHeaderUnits(size);
-
-  long bpEndAdress = (long) bp + bp->s.size*sizeof(Header);
-
-  /*Header * p, prevp = freep;
-  for(p = freep->s.ptr; p != freep; prevp=p, p=p->s.ptr){
-    if(p == bpEndAdress && p->s.size >= additionalSizeReq) {
-      unsigned sizeDiff = nunits - (bp->s.size + trailer->s.size);
-      if( sizeDiff > 2 ){
-        Header * rest = (long)bpEndAdress + nunits*sizeof(Header);
-        rest->s.size = sizeDiff;
-        rest->s.ptr = p->s.ptr;
-        prevp->s.ptr = rest;
-        sizeDiff = 0;
-      }
-      bp->s.size = nunits + sizeDiff;
-      bp->s.ptr = rest;
-      return (void *)(bp+1);
-    }  
-  }*/
-
-  /* else move data */
 
   void *newHome = malloc(size);
   memcpy(newHome, ptr, bp->s.size*sizeof(Header));
