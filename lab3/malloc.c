@@ -32,6 +32,28 @@ static Header base;                                     /* empty list to get sta
 static Header *freep = NULL;                            /* start of free list */
 
 
+void show(char* msg){
+  fprintf(stderr, "========= %s ========\n", msg);
+  Header *p, *prevp;
+
+  print("freep  ", (long)freep);
+  print("   size", freep->s.size);
+  print("   pntr", (long)freep->s.ptr);
+  int mittis = 0;
+  for(p=freep->s.ptr; ;prevp = p, p = p->s.ptr){
+    if(p == freep || ++mittis == 40)
+      break;
+    print("pointer", (long)p);
+    fprintf(stderr, "   size: %d\n", p->s.size);
+    print("   pntr", (long)p->s.ptr);
+  }
+  if(mittis == 40)
+    print("ERROR - no pointer back to freep", 1);
+
+  print("====================", 0);
+}
+
+
 /* free: put block ap in the free list */
 
 void free(void * ap)
@@ -126,8 +148,7 @@ void * malloc(size_t nbytes) {
   }
 
 #if STRATEGY == STRATEGY_BEST
-  Header *best = NULL,
-         *prevbest = NULL;
+  Header *best = NULL, *prevbest;
 
   for(p = prevp->s.ptr ; ; prevp = p, p = p->s.ptr){
     if( p->s.size >= nunits ){
@@ -150,19 +171,23 @@ void * malloc(size_t nbytes) {
     }
   }
   /* p.size är för stor, minska den så den passar*/
-  fprintf(stderr, "size of best: %d \n", best->s.size);
-  
-  Header rest;
-  rest.s.size = best->s.size - nunits * sizeof(Header);
-  rest.s.ptr = best->s.ptr;
-  best->s.size = nunits * sizeof(Header);
-  best->s.ptr = &rest;
-  prevbest->s.ptr = &rest;
-  
 
-  fprintf(stderr, "size of best: %d \n", best->s.size);
+  /*show("pre");
 
-  show();
+  print("best", (long) best );*/
+
+  Header *rest = (long)(best) + (nunits)*sizeof(Header);
+  rest->s.size = best->s.size - nunits;
+  rest->s.ptr = best->s.ptr;
+
+  best->s.size = nunits;
+  best->s.ptr = rest;
+  prevbest->s.ptr = rest;
+
+  if(best == freep)
+    freep = prevbest;
+
+  /*show("post");*/
   return (void*)(best+1);
   #endif
 
@@ -188,23 +213,4 @@ void * malloc(size_t nbytes) {
   #endif
 }
 
-void show(){
-  print("======= SHOW =======", 0);
-  Header *p, *prevp;
 
-  print("freep is", (long)freep);
-  print("    size", freep->s.size);
-  print("    ptr ", (long)freep->s.ptr);
-  int mittis = 0;
-  for(p=freep->s.ptr; ;prevp = p, p = p->s.ptr){
-    if(p == freep || mittis++ == 40)
-      break;
-    print("pointer ", (long)p);
-    print("    size", p->s.size);
-    print("    ptr ", (long)p->s.ptr);
-  }
-  if(mittis == 40)
-    print("ERROR - no pointer back to freep", 1);
-
-  print("====================", 0);
-}
