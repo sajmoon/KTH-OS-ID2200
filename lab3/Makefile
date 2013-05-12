@@ -41,6 +41,9 @@ t6: tstcrash_simple.o malloc.o $(X)
 t7: malloc.o $(X)
 	$(CC) $(XFLAGS) -o $@  tstcrash_complex.c malloc.o $(X) 
 
+t8: malloc.o $(X)
+	$(CC) $(XFLAGS) -o $@  tstcrash_complex.c malloc.o $(X) 
+
 clean:
 	\rm -f $(BIN) $(OBJ) core
 
