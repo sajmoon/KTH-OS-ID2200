@@ -21,6 +21,7 @@
 *.log*.swp
 *.swp
 *.loc
+*.log
 
 lab3/t[0-9]
 
