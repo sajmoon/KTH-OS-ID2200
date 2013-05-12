@@ -74,7 +74,11 @@ simpleMallocTest2() {
 
 int main(int argc, char const *argv[]) {
   
-  
+  void *test = malloc(12*sizeof(int));
+
+  free(test);
+
+
   simpleMallocTest1();
   simpleMallocTest2();
   simpleReallocTest();
