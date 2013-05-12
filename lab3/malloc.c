@@ -11,6 +11,8 @@
 #define STRATEGY_FIRST  1
 #define STRATEGY_BEST   2
 
+unsigned bytesToHeaderUnits(size_t);
+
 
 void print(char* message, long value){  
     fprintf(stderr, "%s: %ld\n", message, value);
@@ -74,6 +76,46 @@ void showStats() {
   }
 }
 
+
+void realloc(void* ptr, size_t size){
+  /* basfall */
+  if(ptr == NULL)
+    return malloc(size);
+  if(size == 0){
+    free(ptr);
+    return NULL;
+  }
+
+  Header * bp = (Header*) ptr;
+  unsigned nunits = bytesToHeaderUnits(size);
+
+  long bpEndAdress = (long) bp + bp->s.size*sizeof(Header);
+
+  /*Header * p, prevp = freep;
+  for(p = freep->s.ptr; p != freep; prevp=p, p=p->s.ptr){
+    if(p == bpEndAdress && p->s.size >= additionalSizeReq) {
+      unsigned sizeDiff = nunits - (bp->s.size + trailer->s.size);
+      if( sizeDiff > 2 ){
+        Header * rest = (long)bpEndAdress + nunits*sizeof(Header);
+        rest->s.size = sizeDiff;
+        rest->s.ptr = p->s.ptr;
+        prevp->s.ptr = rest;
+        sizeDiff = 0;
+      }
+      bp->s.size = nunits + sizeDiff;
+      bp->s.ptr = rest;
+      return (void *)(bp+1);
+    }  
+  }*/
+
+  /* else move data */
+
+  void *newHome = malloc(size);
+  memcpy(newHome, ptr, bp->s.size*sizeof(Header));
+  free(ptr);
+  show("realloc");
+  return newHome;
+}
 
 /* free: put block ap in the free list */
 
@@ -161,7 +203,7 @@ void * malloc(size_t nbytes) {
 
   if(nbytes == 0) return NULL;
 
-  nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) +1;
+  nunits = bytesToHeaderUnits(nbytes);
 
   if((prevp = freep) == NULL) {
     base.s.ptr = freep = prevp = &base;
@@ -208,8 +250,8 @@ void * malloc(size_t nbytes) {
   if(best == freep)
     freep = prevbest;
 
-  /*show("post");*/
-  showStats();
+  show("malloc");
+  /*showStats();*/
 
   return (void*)(best+1);
   #endif
@@ -236,4 +278,6 @@ void * malloc(size_t nbytes) {
   #endif
 }
 
-
+unsigned bytesToHeaderUnits(size_t nbytes){
+  return (nbytes+sizeof(Header)-1)/sizeof(Header) +1;
+}
