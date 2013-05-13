@@ -222,7 +222,6 @@ void * malloc(size_t nbytes) {
   #endif
 
 #if STRATEGY == STRATEGY_FIRST
-  fprintf(stderr, "Fail - next fit");
     for(p= prevp->s.ptr;  ; prevp = p, p = p->s.ptr) {
       if(p->s.size >= nunits) {                           /* big enough */
         if (p->s.size == nunits)                          /* exactly */
@@ -234,11 +233,14 @@ void * malloc(size_t nbytes) {
         }
         freep = prevp;
         return (void *)(p+1);
+      }
 
     if(p == freep)                                      /* wrapped around free list */
       if((p = morecore(nunits)) == NULL)
         return NULL;                                    /* none left */
-  }
+
+    }
+  
 
   #endif
 }
