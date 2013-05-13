@@ -13,15 +13,10 @@
 #define STRATEGY_BEST   2
 
 unsigned bytesToHeaderUnits(size_t);
-
 void free(void*);
 void * malloc(size_t );
 void * realloc(void* , size_t);
 int getpagesize(void);
-
-void print(char* message, long value){  
-    fprintf(stderr, "%s: %ld\n", message, value);
-}
 
 typedef long Align;                                     /* for alignment to long boundary */
 
@@ -39,6 +34,12 @@ static Header base;                                     /* empty list to get sta
 static Header *freep = NULL;                            /* start of free list */
 
 
+/* Helper method to print information without use of malloc */
+void print(char* message, long value){  
+    fprintf(stderr, "%s: %ld\n", message, value);
+}
+
+/* Displays the entire free list */
 void show(char* msg){
   /* for debug perposes only */
   fprintf(stderr, "========= %s ========\n", msg);
@@ -59,8 +60,7 @@ void show(char* msg){
   print("====================", 0);
 }
 
-
-
+/* returns a new pointer */
 void * realloc(void* ptr, size_t size){
   /* basfall */
   if(ptr == NULL)
@@ -71,22 +71,23 @@ void * realloc(void* ptr, size_t size){
   }
 
   Header * hp = ((Header*) ptr)-1;
+  /* Vi kan alltid räkna med att vi ska göra en ny.
+   * Det är inte super effektivt men det fungerar. */
+  /* Flytta datan till nya platsen */
 
   void *newHome = malloc(size);
-  
   unsigned cpysize1 = (hp->s.size-1)*sizeof(Header);
-
-  
   cpysize1 = (size < cpysize1)? size: cpysize1;
-  
   memcpy(newHome, ptr, cpysize1);
+
+  /* free förra stället */
   free(ptr);
   
+  /* returnera nya pekaren */
   return newHome;
 }
 
 /* free: put block ap in the free list */
-
 void free(void * ap)
 {
   Header *bp, *p;
@@ -117,11 +118,7 @@ void free(void * ap)
   freep = p;
 }
 
-
-/* morecore: ask system for more memory */
-
 #ifdef MMAP
-
 static void * __endHeap = 0;
 
 void * endHeap(void)
@@ -131,7 +128,7 @@ void * endHeap(void)
 }
 #endif
 
-
+/* morecore: ask system for more memory */
 static Header *morecore(unsigned nu)
 {
   void *cp;
@@ -162,7 +159,8 @@ static Header *morecore(unsigned nu)
   free((void *)(up+1));
   return freep;
 }
-  
+ 
+/* returns the address to the assigned bock */
 void * malloc(size_t nbytes) {
   
   Header *p, *prevp;
@@ -171,12 +169,12 @@ void * malloc(size_t nbytes) {
 
   if(nbytes == 0) return NULL;
 
-  nunits = bytesToHeaderUnits(nbytes);
-
   if((prevp = freep) == NULL) {
     base.s.ptr = freep = prevp = &base;
     base.s.size = 0;
   }
+
+  nunits = bytesToHeaderUnits(nbytes);
 
 #if STRATEGY == STRATEGY_BEST
   Header *best = NULL, *prevbest;
@@ -188,25 +186,20 @@ void * malloc(size_t nbytes) {
         return (void *)(p+1);
       } else { /* if bigger */
         if( best == NULL || best->s.size > p->s.size){
-          best = p;
-          prevbest = prevp;
+          best = p; prevbest = prevp;
         }
       }
     }
     if(p == freep){
+      /* Efter ett varv, har vi en som är bäst?*/
       if(best != NULL)
         break;
-      
+      /* annars morecorare vi fram mer minne och kör igen!*/
       if((p = morecore(nunits)) == NULL)
         return NULL;                                   /* none left */
     }
   }
   /* p.size är för stor, minska den så den passar*/
-
-  /*show("pre");
-
-  print("best", (long) best );*/
-
   Header *rest = (Header *)((long)best + (nunits)*sizeof(Header));
   rest->s.size = best->s.size - nunits;
   rest->s.ptr = best->s.ptr;
@@ -219,7 +212,7 @@ void * malloc(size_t nbytes) {
     freep = prevbest;
 
   return (void*)(best+1);
-  #endif
+#endif
 
 #if STRATEGY == STRATEGY_FIRST
     for(p= prevp->s.ptr;  ; prevp = p, p = p->s.ptr) {

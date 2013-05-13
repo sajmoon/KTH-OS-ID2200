@@ -1,11 +1,12 @@
 #include <stdio.h>
-#include "malloc.h"
+#include <malloc.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
 #include "sys/types.h"
 #include "sys/sysinfo.h"
 #include <string.h>
+#include <stdlib.h>
 
 #define LOOPCOUNTS 40000
 #define defaultObjectSize 200
@@ -16,12 +17,13 @@ typedef struct {
 
 void printUsage();
 
-void main(int argc, char* argv) {
+int main(int argc, char ** argv) {
     
   void * mallocs[LOOPCOUNTS];
   int i = 0;
   
   printUsage();
+
   for (i = 0; i < LOOPCOUNTS; i++) {
     mallocs[i] = malloc(defaultObjectSize);
   }
@@ -33,7 +35,7 @@ void main(int argc, char* argv) {
   
   printUsage(); 
   for (i = LOOPCOUNTS - 1; i >= 0; i -= 2) {
-    realloc(mallocs[i], 5*defaultObjectSize);
+    mallocs[i] = realloc(mallocs[i], 5*defaultObjectSize);
   }
 
   printUsage();
@@ -84,13 +86,12 @@ int getPhysicalValue(){ //Note: this value is in KB!
 
 void printUsage() {
   
-  int value = getValue();
-  printf("virtual mem usage: %d\n", value);
+  // int value = getValue();
+  // printf("virtual mem usage: %d\n", value);
 
-  value = getPhysicalValue();
+  int value = getPhysicalValue();
   printf("physical mem usage: %d\n", value);
   //struct rusage * usage;
-  //struct timeval start, end;
 
 
   //struct rusage {
@@ -116,8 +117,6 @@ void printUsage() {
   //getrusage(RUSAGE_SELF, usage);
 
   //printf("shared memmory size: %ld - %ld - %ld\n", usage->ru_ixrss, usage->ru_idrss, usage->ru_isrss);
-
-  //end = usage.ru_stime;
 
   //printf("Time: %ld.%lds\n", end.tv_sec, end.tv_usec);
 }
