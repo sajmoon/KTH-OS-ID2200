@@ -24,6 +24,8 @@
 #include <syslog.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 
 /* Pipe constants */
 #define READ        0
@@ -42,9 +44,10 @@ bool safe_fork() {
 
     if (pid < 0){
         printf("forking error");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
-    // Prints a log message with the pid so we can track if a process is not killed
+    /* Prints a log message with the pid,
+        so we can track if a process is not killed */
     openlog("digenv", LOG_CONS, LOG_LOCAL1);
     syslog(LOG_INFO, "pid %d", pid);
     return pid == 0;
@@ -77,6 +80,20 @@ char *get_pager() {
     return (value) ? value : "less";
 }
 
+static int a = 0;
+
+void wait_for_child_to_terminate() {
+    return;
+    int status;
+    fprintf(stderr, "Waiting for child %d\n", a++);
+    wait(&status);
+
+    if ( !WIFEXITED(status) ) {
+        fprintf(stderr, "Child failed to terminate\n");
+        _exit(EXIT_FAILURE);
+    }
+}
+
 /* 
     With no arguments specified: works as printenv | sort | less
     if we have defined pager in env variabels, that pager is used instead of less
@@ -92,14 +109,15 @@ int main(int argc, char **argv, char **envp)
 
     isChild = safe_fork();
     if ( isChild ) {
-        // child pager
+        /* child pager */
         prepare_send_pipe(DIGENV);
         execlp("printenv","printenv",NULL);
-        perror("errror");       /* still around?  exec failed  */
         _exit(EXIT_FAILURE);
     }
 
     receive_from_pipe(DIGENV);
+
+    wait_for_child_to_terminate();
 
     pipe(pipes[GREP]);
 
@@ -107,35 +125,41 @@ int main(int argc, char **argv, char **envp)
     if ( isChild ) {
         prepare_send_pipe(GREP);
         if (argc > 1) {
-        // runs the binary "grep" with the arguments in argv
-                execvp("grep", argv);
-
-                // if we get here, grep has failed.
-                perror("Grep failed");
-                _exit(EXIT_FAILURE);
-        } 
-        //else: No grep due to no arguments
+        /* runs the binary "grep" with the arguments in argv */
+            execvp("grep", argv);
+        }else {
+            /* cat simply rewrites input to output, just like 
+            a grep without arguments ;) */
+            execvp("cat", argv);
+        }
+        _exit(EXIT_FAILURE);
     }
+
     receive_from_pipe(GREP);
+
+    wait_for_child_to_terminate();
 
     pipe(pipes[SORT]);
 
     isChild = safe_fork();
     if ( isChild ) {
         prepare_send_pipe(SORT);
-    // runs the sort binary with to parameters but with piped input
+    /* runs the sort binary with to parameters but with piped input */
         execlp("/usr/bin/sort","sort",NULL);
 
-        // If we get here, call to sort has failed.
+        /* If we get here, call to sort has failed. */
         perror("Sorting failed");
         _exit(EXIT_FAILURE);
     }
+
     receive_from_pipe(SORT);
-    
-    // runs the specified pager with input from pipe
+
+    wait_for_child_to_terminate();
+
+    /* runs the specified pager with input from pipe */
     execlp(get_pager(), get_pager(), NULL);
 
-    // if we get here, pager has failed.
+    /* if we get here, pager has failed. */
     perror("Invalid pager"); 
     _exit(EXIT_FAILURE);
     return EXIT_FAILURE;
