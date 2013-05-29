@@ -80,17 +80,13 @@ char *get_pager() {
     return (value) ? value : "less";
 }
 
-static int a = 0;
-
 void wait_for_child_to_terminate() {
-    return;
     int status;
-    fprintf(stderr, "Waiting for child %d\n", a++);
     wait(&status);
 
     if ( !WIFEXITED(status) ) {
-        fprintf(stderr, "Child failed to terminate\n");
-        _exit(EXIT_FAILURE);
+        printf("Child failed to terminate\n");
+        _exit(EXIT_FAILURE); /* kill parent */
     }
 }
 
