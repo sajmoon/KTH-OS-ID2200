@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ -x a.out ]
 then
-  rm testFile
+  rm a.out
 fi
 
 gcc -DSTRATEGY=2 -pg -Wall testPrestanda.c malloc.c
