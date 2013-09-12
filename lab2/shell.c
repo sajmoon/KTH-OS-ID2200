@@ -22,6 +22,8 @@ typedef void (*sighandler_t)(int);
 
 int pipes[PIPE_COUNT][2];
 
+char * message;
+
 void prompt() {
   char cwd[2014];
   getcwd(cwd, sizeof(cwd));
@@ -101,12 +103,13 @@ void runCommand(char ** args) {
   pid   = fork();
   bg    = is_background(args);
 
+  pipe(pipes[0]);
+
   if (pid < 0) {
     /* error */
     printf("Error in forking. We should check this out.");
   } else if (pid == 0) {
     /* Child */
-
     if (execvp(args[0], args) < 0) {
       printf("Could not find program or it failed in some way\n");
       exit(1);
@@ -117,6 +120,10 @@ void runCommand(char ** args) {
       free(args);
     }
 
+    char string[] = "hej";
+    close(pipes[0][READ]);
+    write(pipes[0][WRITE], string, strlen(string)+1);
+    close(pipes[0][WRITE]);
   } else {
     /* parent */
     if (!bg) {
@@ -127,6 +134,11 @@ void runCommand(char ** args) {
       print_pid(pid);
       free(args);
     }
+    char msg[100];
+    close(pipes[0][WRITE]);
+    read(pipes[0][READ], msg, sizeof(msg));
+    close(pipes[0][READ]);
+    printf("pipe message: %s\n", msg);
   }
 }
 
@@ -156,19 +168,18 @@ int main(int argc, char **argv, char **envp)
     
     if (strcmp(args[0], "exit") == 0) {
       printf("Good bye! ttyl\n");
+      free(args);
       return EXIT_SUCCESS;
 
     } else if (strcmp(args[0], "cd") == 0) {
-      char ** args = NULL;
-      args = tokenize(input);
       chdir(args[1]);
-      free(args);
     } else {
       runCommand(args);
       print_usage();
  
     }
   }
+  free(args);
   return EXIT_SUCCESS;
 }
 
