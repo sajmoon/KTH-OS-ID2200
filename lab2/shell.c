@@ -144,10 +144,11 @@ void runCommand(char ** args) {
 
 int main(int argc, char **argv, char **envp)
 {
-  size_t size = 70;
-  char* input = NULL;
-  char ** args = NULL;
+  size_t  size   = 70;
+  char*   input  = NULL;
+  char ** args   = NULL;
 
+  /* Register interupts */
   signal(SIGINT, SIG_IGN);
   signal(SIGINT, handle_signal);
   
@@ -172,13 +173,24 @@ int main(int argc, char **argv, char **envp)
       return EXIT_SUCCESS;
 
     } else if (strcmp(args[0], "cd") == 0) {
+<<<<<<< HEAD
       chdir(args[1]);
+=======
+      /* char ** args = NULL; */
+      /* args = tokenize(input); */
+      chdir(args[1]);
+      /* free(args); */
+>>>>>>> 75e686b570afda9af6eb175aa9b3c40ff7eb3ecd
     } else {
       runCommand(args);
       print_usage();
  
     }
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 75e686b570afda9af6eb175aa9b3c40ff7eb3ecd
   free(args);
   return EXIT_SUCCESS;
 }
