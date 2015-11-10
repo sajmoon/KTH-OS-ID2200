@@ -29,7 +29,7 @@ void execute(char* command, char **argv)
   {
     child_execute (pid, command, argv);
   } else {
-    int a = wait(&wait_return);
+    wait(&wait_return);
     printf("Child finished executing\n");
   }
 }
