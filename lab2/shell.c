@@ -8,6 +8,12 @@
 #define SKIP_EXECUTE 0
 #define NORMAL_EXECUTE 1
 
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+
 
 /* prompt -> prints to term. waits for input. */
 void prompt(char* input, const int input_length)
@@ -16,9 +22,10 @@ void prompt(char* input, const int input_length)
   getcwd(cwd, sizeof(cwd));
 
   do {
-    printf("%s >> ", cwd);
+    printf("%s%s %s>> %s", KRED, cwd, KYEL, KNRM);
     fgets(input, input_length, stdin);
   } while(strcmp(input, "\n") == 0);
+
   strtok(input, "\n"); /* does not strip on string with only \n in it. */
 }
 
