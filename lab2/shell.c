@@ -49,7 +49,7 @@ char** getargs(char* input) {
   for(i =0; i<6; i++)
   {
     if(token != NULL){
-      tokenc = malloc(sizeof(token)*sizeof(char));
+      tokenc = malloc(71*sizeof(char));
       strcpy(tokenc, token);
       args[i] = tokenc;
       token = strtok(NULL, " ");
