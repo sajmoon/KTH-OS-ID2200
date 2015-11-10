@@ -37,10 +37,22 @@ void child_execute(int pid, char* command, char **argv)
     printf("Unknown or invalid command: %s\n", command);
 }
 
+void printUsage(int pid, struct rusage start) {
+  struct rusage usage;
+  struct timeval end;
+  int total;
+  printf("--> Foreground process %d terminated\n", pid);
+  getrusage(RUSAGE_SELF, &usage);
+  end = usage.ru_utime;
+  total = usage.ru_utime.tv_usec - start.ru_utime.tv_usec;
+  printf("--> Time: %lld micro seconds\n", (int64_t)total);
+}
+
 void execute(char* command, char **argv)
 {
   int pid;
   int wait_return;
+  struct rusage start_usage;
 
   pid = fork();
 
@@ -48,8 +60,10 @@ void execute(char* command, char **argv)
   {
     child_execute (pid, command, argv);
   } else {
+    printf("--> Spawned foreground process pid: %d\n", pid);
+    getrusage(RUSAGE_SELF, &start_usage);
     wait(&wait_return);
-    printf("Child finished executing\n");
+    printUsage(pid, start_usage);
   }
 }
 
