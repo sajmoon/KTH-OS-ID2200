@@ -1,10 +1,11 @@
 #include <stdio.h>
 
 /* prompt -> prints to term. waits for input. */
-void prompt(char* input, size_t input_length)
+void prompt(char* input, int input_length)
 {
   printf("$ ");
-  getline(&input, &input_length, stdin);
+  fgets(input, input_length, stdin);
+
 }
 
 int main(int argc, char **argv, char **envp)
