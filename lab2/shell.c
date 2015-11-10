@@ -38,7 +38,6 @@ void execute(char* command, char **argv)
   }
 }
 
-
 char** getargs(char* input) {
   int i;
   char * tokenc;
