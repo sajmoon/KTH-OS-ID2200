@@ -1,12 +1,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
-#define EXECUTE_STATUS int
-#define SKIP_EXECUTE 0
-#define NORMAL_EXECUTE 1
+#define EXECUTE_STATUS bool
+#define SKIP_EXECUTE false
+#define NORMAL_EXECUTE true
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
