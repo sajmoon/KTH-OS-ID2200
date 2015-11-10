@@ -15,9 +15,10 @@ void prompt(char* input, const int input_length)
   char cwd[1024];
   getcwd(cwd, sizeof(cwd));
 
-  printf("%s >> ", cwd);
-  fgets(input, input_length, stdin);
-
+  do {
+    printf("%s >> ", cwd);
+    fgets(input, input_length, stdin);
+  } while(strcmp(input, "\n") == 0);
   strtok(input, "\n"); /* does not strip on string with only \n in it. */
 }
 
