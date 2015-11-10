@@ -33,7 +33,7 @@ void prompt(char* input, const int input_length)
 void child_execute(int pid, char* command, char **argv)
 {
     execvp(command, argv);
-    printf("Error: execwp failed\n");
+    printf("Unknown or invalid command: %s\n", command);
 }
 
 void execute(char* command, char **argv)
