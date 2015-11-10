@@ -7,7 +7,10 @@
 /* prompt -> prints to term. waits for input. */
 void prompt(char* input, const int input_length)
 {
-  printf("$ ");
+  char cwd[1024];
+  getcwd(cwd, sizeof(cwd));
+
+  printf("%s >> ", cwd);
   fgets(input, input_length, stdin);
 
   strtok(input, "\n"); /* does not strip on string with only \n in it. */
