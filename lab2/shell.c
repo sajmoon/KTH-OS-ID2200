@@ -39,9 +39,14 @@ int main(int argc, char **argv, char **envp)
   char input[70];
   const size_t input_length = 70;
 
-  prompt(input, input_length);
+  while (1) {
+    prompt(input, input_length);
 
-  execute(input, argv);
+    if(strcmp(input, "exit") == 0)
+      break;
+
+    execute(input, argv);
+  }
 
   return 0;
 }
