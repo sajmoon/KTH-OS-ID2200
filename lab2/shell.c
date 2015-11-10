@@ -90,7 +90,7 @@ EXECUTE_STATUS builtin(char* command, char** args)
 {
   if(strcmp(command, "exit") == 0)
   {
-    printf(">> Bye..");
+    printf("%s>> %sBye..", KYEL, KNRM);
     freeargs(args);
     exit(0);
   }
