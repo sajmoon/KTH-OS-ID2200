@@ -4,6 +4,11 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+#define EXECUTE_STATUS int
+#define SKIP_EXECUTE 0
+#define NORMAL_EXECUTE 1
+
+
 /* prompt -> prints to term. waits for input. */
 void prompt(char* input, const int input_length)
 {
@@ -70,47 +75,42 @@ void freeargs(char** args) {
   for(i=0; i<6; i++) {
     free(args[i]);
   }
+  free(args);
 }
 
-int builtin(char* command, char** args)
+EXECUTE_STATUS builtin(char* command, char** args)
 {
   if(strcmp(command, "exit") == 0)
   {
     printf(">> Bye..");
     freeargs(args);
-    return -1;
+    exit(0);
   }
 
   if (strcmp(command, "cd") == 0)
   {
     chdir(args[1]);
-    return 1;
+    return SKIP_EXECUTE;
   }
-  return 0;
+  return NORMAL_EXECUTE;
 }
 
 int main(int argc, char **argv, char **envp)
 {
   char **args;
   char input[71];
-  int builtin_return;
   const size_t input_length = 71;
 
   while (1) {
     prompt(input, input_length);
     args = getargs(input);
 
-    builtin_return = builtin(args[0], args);
-    if (builtin_return == -1)
-    {
-      break;
-    } else if (builtin_return == 0) {
+    if(builtin(args[0], args) == NORMAL_EXECUTE) {
       execute(args[0], args);
     }
 
     freeargs(args);
   }
 
-  free(args);
   return 0;
 }
