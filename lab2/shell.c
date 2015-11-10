@@ -70,22 +70,41 @@ void freeargs(char** args) {
   }
 }
 
+int builtin(char* command, char** args)
+{
+  if(strcmp(command, "exit") == 0)
+  {
+    printf(">> Bye..");
+    freeargs(args);
+    return -1;
+  }
+
+  if (strcmp(command, "cd") == 0)
+  {
+    chdir(args[1]);
+    return 1;
+  }
+  return 0;
+}
+
 int main(int argc, char **argv, char **envp)
 {
   char **args;
   char input[71];
+  int builtin_return;
   const size_t input_length = 71;
 
   while (1) {
     prompt(input, input_length);
     args = getargs(input);
 
-    printf("args %s %s\n", args[0], args[1]);
-
-    if(strcmp(input, "exit") == 0)
+    builtin_return = builtin(args[0], args);
+    if (builtin_return == -1)
+    {
       break;
-
-    execute(args[0], args);
+    } else if (builtin_return == 0) {
+      execute(args[0], args);
+    }
 
     freeargs(args);
   }
