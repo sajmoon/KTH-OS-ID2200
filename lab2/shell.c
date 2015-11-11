@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 
 #define EXECUTE_STATUS bool
@@ -31,26 +32,52 @@ void prompt(char* input, const int input_length)
   strtok(input, "\n"); /* does not strip on string with only \n in it. */
 }
 
-void child_execute(int pid, char* command, char **argv)
-{
-    execvp(command, argv);
-    printf("Unknown or invalid command: %s\n", command);
+bool ends_with_ampersand(const char* input) {
+  return strcmp(&input[strlen(input)-1], "&") == 0;
 }
 
-void execute(char* command, char **argv)
+void child_execute(int pid, char* command, char **argv)
 {
-  int pid;
-  int wait_return;
+  execvp(command, argv);
+  printf("Unknown or invalid command: %s\n", command);
+  _exit(1);
+}
 
+void freeargs(char** args) {
+  int i;
+  printf("free willy, dead or alive!\n");
+
+  for(i=0; i<6; i++) {
+    free(args[i]);
+  }
+  free(args);
+}
+
+void execute(char* command, char **argv, const bool is_background)
+{
+  pid_t pid, pid2;
+  int wait_return, wait_return2;
+  
   pid = fork();
 
   if (pid == 0)
   {
-    child_execute (pid, command, argv);
+    pid2 = fork();
+    if (pid2 == 0){
+      child_execute (pid, command, argv);
+    } else {
+      waitpid(pid2, &wait_return2, WUNTRACED);
+      
+      printf("Command '%s' finished in <USAGE STATISTICS HÄR SIMON FÖR HELVETE>\n", command);
+      
+      freeargs(argv);
+      _exit(0);
+    }
   } else {
-    wait(&wait_return);
-    printf("Child finished executing\n");
+    if(!is_background)
+      waitpid(pid, &wait_return, WUNTRACED);
   }
+  printf("all done\n");
 }
 
 char** getargs(char* input) {
@@ -63,9 +90,9 @@ char** getargs(char* input) {
   
   token = strtok(input, " ");
 
-  for(i =0; i<6; i++)
+  for(i =0; i<7; i++)
   {
-    if(token != NULL){
+    if(token != NULL && strcmp(token, "&") != 0){
       tokenc = malloc(71*sizeof(char));
       strcpy(tokenc, token);
       args[i] = tokenc;
@@ -76,16 +103,6 @@ char** getargs(char* input) {
   }
 
   return args;
-}
-
-void freeargs(char** args) {
-  int i;
-  printf("free willy, dead or alive!\n");
-
-  for(i=0; i<6; i++) {
-    free(args[i]);
-  }
-  free(args);
 }
 
 EXECUTE_STATUS builtin(char* command, char** args)
@@ -109,17 +126,17 @@ int main(int argc, char **argv, char **envp)
 {
   char **args;
   char input[71];
+  bool is_background_process;
   const size_t input_length = 71;
 
   while (1) {
     prompt(input, input_length);
+    is_background_process= ends_with_ampersand(input);
     args = getargs(input);
 
     if(builtin(args[0], args) == NORMAL_EXECUTE) {
-      execute(args[0], args);
+      execute(args[0], args, is_background_process);
     }
-
-    freeargs(args);
   }
 
   return 0;
