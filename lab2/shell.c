@@ -17,14 +17,28 @@
 #define KBLU  "\x1B[34m"
 
 
+void print_prompt() {
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    printf("%s%s %s>> %s", KRED, cwd, KYEL, KNRM);
+    fflush(stdout);
+}
+
+void print_usage(const char* command, const bool is_background) {
+    if (is_background)
+      printf("\n");
+
+    printf("Command '%s' finished in <USAGE STATISTICS HÄR SIMON FÖR HELVETE>\n", command);
+
+    if (is_background)
+      print_prompt();
+}
+
 /* prompt -> prints to term. waits for input. */
 void prompt(char* input, const int input_length)
 {
-  char cwd[1024];
-  getcwd(cwd, sizeof(cwd));
-
   do {
-    printf("%s%s %s>> %s", KRED, cwd, KYEL, KNRM);
+    print_prompt();
     fgets(input, input_length, stdin);
   } while(strcmp(input, "\n") == 0);
 
@@ -63,7 +77,6 @@ char** getargs(char* input) {
 
 void freeargs(char** args) {
   int i;
-  printf("free willy, dead or alive!\n");
 
   for(i=0; i<6; i++) {
     free(args[i]);
@@ -78,7 +91,7 @@ void execute_and_exit(char* command, char** argv)
   _exit(1);
 }
 
-void execute_then_free(char* command, char **argv)
+void execute_then_free(char* command, char **argv, const bool is_background)
 {
   int pid, wait_return;
   pid = fork();
@@ -86,9 +99,9 @@ void execute_then_free(char* command, char **argv)
     execute_and_exit(command, argv);
   } else {
     waitpid(pid, &wait_return, WUNTRACED);
-      
-    printf("Command '%s' finished in <USAGE STATISTICS HÄR SIMON FÖR HELVETE>\n", command);
-      
+
+    print_usage(command, is_background);
+
     freeargs(argv);
     _exit(0);
   }
@@ -103,7 +116,7 @@ void execute(char* command, char **argv, const bool is_background)
 
   if (pid == 0)
   {
-    execute_then_free(command, argv);
+    execute_then_free(command, argv, is_background);
   } else {
     if(!is_background) {
       waitpid(pid, &wait_return, WUNTRACED);
