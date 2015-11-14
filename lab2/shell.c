@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 
 #define EXECUTE_STATUS bool
 #define SKIP_EXECUTE false
@@ -12,7 +14,7 @@
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
+#define KGRNn  "\x1B[32m"
 #define KYEL  "\x1B[33m"
 #define KBLU  "\x1B[34m"
 
@@ -24,14 +26,21 @@ void print_prompt() {
     fflush(stdout);
 }
 
-void print_usage(const char* command, const bool is_background) {
-    if (is_background)
-      printf("\n");
 
-    printf("Command '%s' finished in <USAGE STATISTICS HÄR SIMON FÖR HELVETE>\n", command);
+void print_usage(const pid_t pid, const char* command, const bool is_background, struct timeval start_time) {
+  struct timeval end_time;
+  gettimeofday(&end_time, 0);
 
-    if (is_background)
-      print_prompt();
+  if (is_background)
+    printf("\n");
+
+  printf("Pid: %d finished command '%s' in", pid, command);
+
+  printf(" %ld.%06lds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
+
+  if (is_background)
+    print_prompt();
+  fflush(stdout);
 }
 
 /* prompt -> prints to term. waits for input. */
@@ -93,14 +102,19 @@ void execute_and_exit(char* command, char** argv)
 
 void execute_then_free(char* command, char **argv, const bool is_background)
 {
+  /* Executed only as child */
   int pid, wait_return;
+  struct timeval start_time;
+  gettimeofday(&start_time, 0);
+  
   pid = fork();
+  
   if (pid == 0){
     execute_and_exit(command, argv);
   } else {
     waitpid(pid, &wait_return, WUNTRACED);
 
-    print_usage(command, is_background);
+    print_usage(pid, command, is_background, start_time);
 
     freeargs(argv);
     _exit(0);
@@ -150,7 +164,7 @@ int main(int argc, char **argv, char **envp)
 
   while (1) {
     prompt(input, input_length);
-    is_background_process= ends_with_ampersand(input);
+    is_background_process = ends_with_ampersand(input);
     args = getargs(input);
 
     if(builtin(args[0], args) == NORMAL_EXECUTE) {
