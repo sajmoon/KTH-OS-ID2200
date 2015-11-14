@@ -19,7 +19,8 @@
 #define KBLU  "\x1B[34m"
 
 
-void print_prompt() {
+void print_prompt()
+{
   char cwd[1024];
   getcwd(cwd, sizeof(cwd));
 
@@ -27,12 +28,14 @@ void print_prompt() {
   fflush(stdout);
 }
 
-void print_usage(const pid_t pid, const char* command, const bool is_background, struct timeval start_time) {
+void print_usage(const pid_t pid, const char* command, const bool is_background, struct timeval start_time)
+{
   struct timeval end_time;
   gettimeofday(&end_time, 0);
 
-  if (is_background)
+  if (is_background) {
     printf("\n");
+  }
 
   printf("Pid: %d finished command '%s' in", pid, command);
   printf(" %ld.%06ds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
@@ -48,7 +51,7 @@ void print_usage(const pid_t pid, const char* command, const bool is_background,
 void prompt(char* input, const int input_length)
 {
   int status;
-  
+
   do {
     print_prompt();
     fgets(input, input_length, stdin);
@@ -72,11 +75,13 @@ void prompt(char* input, const int input_length)
   strtok(input, "\n"); /* does not strip on string with only \n in it. */
 }
 
-bool ends_with_ampersand(const char* input) {
+bool ends_with_ampersand(const char* input)
+{
   return strcmp(&input[strlen(input)-1], "&") == 0;
 }
 
-char** getargs(char* input) {
+char** getargs(char* input)
+{
   int i;
   char * tokenc;
   char *token;
@@ -101,7 +106,8 @@ char** getargs(char* input) {
   return args;
 }
 
-void freeargs(char** args) {
+void freeargs(char** args)
+{
   int i;
 
   for(i=0; i<6; i++) {
