@@ -23,10 +23,9 @@ void print_prompt() {
     char cwd[1024];
     getcwd(cwd, sizeof(cwd));
 
-    printf("%s%s %s>> %s", KRED, cwd, KYEL, KNRM);
+    printf("%s%s %s> %s", KRED, cwd, KYEL, KNRM);
     fflush(stdout);
 }
-
 
 void print_usage(const pid_t pid, const char* command, const bool is_background, struct timeval start_time) {
   struct timeval end_time;
@@ -36,11 +35,12 @@ void print_usage(const pid_t pid, const char* command, const bool is_background,
     printf("\n");
 
   printf("Pid: %d finished command '%s' in", pid, command);
+  printf(" %ld.%06ds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
 
-  printf(" %ld.%06lds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
-
-  if (is_background)
+  if (is_background) {
     print_prompt();
+  }
+
   fflush(stdout);
 }
 
@@ -186,7 +186,6 @@ EXECUTE_STATUS builtin(char* command, char** args)
 
 int main(int argc, char **argv, char **envp)
 {
-  int status;
   char **args;
   char input[71];
   bool is_background_process;
