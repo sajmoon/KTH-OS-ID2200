@@ -20,11 +20,11 @@
 
 
 void print_prompt() {
-    char cwd[1024];
-    getcwd(cwd, sizeof(cwd));
+  char cwd[1024];
+  getcwd(cwd, sizeof(cwd));
 
-    printf("%s%s %s> %s", KRED, cwd, KYEL, KNRM);
-    fflush(stdout);
+  printf("%s%s %s> %s", KRED, cwd, KYEL, KNRM);
+  fflush(stdout);
 }
 
 void print_usage(const pid_t pid, const char* command, const bool is_background, struct timeval start_time) {
