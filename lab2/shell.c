@@ -122,7 +122,6 @@ void execute(char* command, char **argv, const bool is_background)
       waitpid(pid, &wait_return, WUNTRACED);
     }
   }
-  printf("all done\n");
 }
 
 EXECUTE_STATUS builtin(char* command, char** args)
