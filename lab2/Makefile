@@ -1,10 +1,11 @@
-all: lab2-ansi
+.PHONY: all valgrind
+all: shell.o
 
-lab2: shell.c
-	gcc -Wall -O4 shell.c -o shell.o
-
-lab2-ansi: shell.c
+shell.o: shell.c
 	gcc -Wall -ansi -pedantic -O3 shell.c -o shell.o
+
+valgrind: shell.o
+	valgrind ./shell.o
 
 automake:
 	@ls *.c | entr -c sh -c "rm -f shell.o && make --no-print-directory && echo done"

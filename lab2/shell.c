@@ -22,6 +22,7 @@
 void print_prompt() {
     char cwd[1024];
     getcwd(cwd, sizeof(cwd));
+
     printf("%s%s %s>> %s", KRED, cwd, KYEL, KNRM);
     fflush(stdout);
 }
@@ -69,7 +70,7 @@ char** getargs(char* input) {
   
   token = strtok(input, " ");
 
-  for(i =0; i<7; i++)
+  for(i =0; i<6; i++)
   {
     if(token != NULL && strcmp(token, "&") != 0){
       tokenc = malloc(71*sizeof(char));
@@ -135,6 +136,8 @@ void execute(char* command, char **argv, const bool is_background)
     if(!is_background) {
       waitpid(pid, &wait_return, WUNTRACED);
     }
+    freeargs(argv);
+
   }
 }
 
