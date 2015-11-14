@@ -50,8 +50,12 @@ void print_usage(const pid_t pid, const char* command, const bool is_background,
 void handle_zombies()
 {
   int status;
+  int pid;
 
-  waitpid(-1, &status, WNOHANG);
+  do {
+    pid = waitpid(-1, &status, WNOHANG);
+    printf("Background job pid [%D] has finished. Removing zombie.\n", pid);
+  } while (pid > 0);
 }
 
 /* prompt -> prints to term. waits for input. */
