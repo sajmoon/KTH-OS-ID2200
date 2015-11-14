@@ -36,50 +36,6 @@ bool ends_with_ampersand(const char* input) {
   return strcmp(&input[strlen(input)-1], "&") == 0;
 }
 
-void child_execute(int pid, char* command, char **argv)
-{
-  execvp(command, argv);
-  printf("Unknown or invalid command: %s\n", command);
-  _exit(1);
-}
-
-void freeargs(char** args) {
-  int i;
-  printf("free willy, dead or alive!\n");
-
-  for(i=0; i<6; i++) {
-    free(args[i]);
-  }
-  free(args);
-}
-
-void execute(char* command, char **argv, const bool is_background)
-{
-  pid_t pid, pid2;
-  int wait_return, wait_return2;
-  
-  pid = fork();
-
-  if (pid == 0)
-  {
-    pid2 = fork();
-    if (pid2 == 0){
-      child_execute (pid, command, argv);
-    } else {
-      waitpid(pid2, &wait_return2, WUNTRACED);
-      
-      printf("Command '%s' finished in <USAGE STATISTICS HÄR SIMON FÖR HELVETE>\n", command);
-      
-      freeargs(argv);
-      _exit(0);
-    }
-  } else {
-    if(!is_background)
-      waitpid(pid, &wait_return, WUNTRACED);
-  }
-  printf("all done\n");
-}
-
 char** getargs(char* input) {
   int i;
   char * tokenc;
@@ -103,6 +59,57 @@ char** getargs(char* input) {
   }
 
   return args;
+}
+
+void freeargs(char** args) {
+  int i;
+  printf("free willy, dead or alive!\n");
+
+  for(i=0; i<6; i++) {
+    free(args[i]);
+  }
+  free(args);
+}
+
+void execute_and_exit(char* command, char** argv)
+{
+  execvp(command, argv);
+  printf("Unknown or invalid command: %s\n", command);
+  _exit(1);
+}
+
+void execute_then_free(char* command, char **argv)
+{
+  int pid, wait_return;
+  pid = fork();
+  if (pid == 0){
+    execute_and_exit(command, argv);
+  } else {
+    waitpid(pid, &wait_return, WUNTRACED);
+      
+    printf("Command '%s' finished in <USAGE STATISTICS HÄR SIMON FÖR HELVETE>\n", command);
+      
+    freeargs(argv);
+    _exit(0);
+  }
+}
+
+void execute(char* command, char **argv, const bool is_background)
+{
+  pid_t pid;
+  int wait_return;
+  
+  pid = fork();
+
+  if (pid == 0)
+  {
+    execute_then_free(command, argv);
+  } else {
+    if(!is_background) {
+      waitpid(pid, &wait_return, WUNTRACED);
+    }
+  }
+  printf("all done\n");
 }
 
 EXECUTE_STATUS builtin(char* command, char** args)
