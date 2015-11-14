@@ -47,30 +47,23 @@ void print_usage(const pid_t pid, const char* command, const bool is_background,
   fflush(stdout);
 }
 
-/* prompt -> prints to term. waits for input. */
-void prompt(char* input, const int input_length)
+void handle_zombies()
 {
   int status;
 
+  waitpid(-1, &status, WNOHANG);
+}
+
+/* prompt -> prints to term. waits for input. */
+void prompt(char* input, const int input_length)
+{
   do {
     print_prompt();
     fgets(input, input_length, stdin);
 
-    if(waitpid(-1, &status, WNOHANG) == -1) {
-      printf("ERROR: waitpid failed\n");
-    }
-
-    if (WIFEXITED(status)) {
-      printf("exited, status=%d\n", WEXITSTATUS(status));
-    } else if (WIFSIGNALED(status)) {
-      printf("killed by signal %d\n", WTERMSIG(status));
-    } else if (WIFSTOPPED(status)) {
-      printf("stopped by signal %d\n", WSTOPSIG(status));
-    } else if (WIFCONTINUED(status)) {
-      printf("continued\n");
-    }
   } while(strcmp(input, "\n") == 0);
 
+  handle_zombies();
 
   strtok(input, "\n"); /* does not strip on string with only \n in it. */
 }
@@ -136,7 +129,7 @@ void execute_then_free(char* command, char **argv, const bool is_background)
     execute_and_exit(command, argv);
   } else {
 
-    if(waitpid(pid, &status, WUNTRACED | WCONTINUED) == -1) {
+    if (waitpid(pid, &status, WUNTRACED | WCONTINUED) == -1) {
       printf("ERROR: NO CHILD TO WAIT FOR\n");
     }
 
@@ -166,6 +159,10 @@ void execute(char* command, char **argv, const bool is_background)
   {
     execute_then_free(command, argv, is_background);
   } else {
+    if (is_background) {
+      printf("[PID: %d] Running '%s' in the background.\n", pid, command);
+    }
+
     if(!is_background && waitpid(pid, &status, WUNTRACED) == -1) {
       printf("ERROR: expected to wait for child process\n");
     }
