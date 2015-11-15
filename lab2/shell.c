@@ -38,7 +38,7 @@ void print_usage(const pid_t pid, const char* command, const bool is_background,
   }
 
   printf("Pid: %d finished command '%s' in", pid, command);
-  printf(" %ld.%06ds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
+  printf(" %ld.%06lds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
 
   if (is_background) {
     print_prompt();
@@ -54,7 +54,7 @@ void handle_zombies()
 
   do {
     pid = waitpid(-1, &status, WNOHANG);
-    printf("Background job pid [%D] has finished. Removing zombie.\n", pid);
+    printf("Background job pid [%d] has finished. Removing zombie.\n", pid);
   } while (pid > 0);
 }
 
