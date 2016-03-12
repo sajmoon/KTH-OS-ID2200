@@ -28,21 +28,13 @@ void print_prompt()
   fflush(stdout);
 }
 
-void print_usage(const pid_t pid, const char* command, const bool is_background, struct timeval start_time)
+void print_usage(const pid_t pid, const char* command, struct timeval start_time)
 {
   struct timeval end_time;
   gettimeofday(&end_time, 0);
 
-  if (is_background) {
-    printf("\n");
-  }
-
   printf("Pid: %d finished command '%s' in", pid, command);
   printf(" %ld.%06lds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
-
-  if (is_background) {
-    print_prompt();
-  }
 
   fflush(stdout);
 }
@@ -122,56 +114,28 @@ void execute_and_exit(char* command, char** argv)
   _exit(EXIT_FAILURE);
 }
 
-void execute_then_free(char* command, char **argv, const bool is_background)
-{
-  /* Executed only as child */
-  int pid, status;
-  struct timeval start_time;
-  gettimeofday(&start_time, 0);
-  
-  pid = fork();
-  
-  if (pid == 0){
-    execute_and_exit(command, argv);
-  } else {
-
-    if (waitpid(pid, &status, WUNTRACED | WCONTINUED) == -1) {
-      printf("ERROR: NO CHILD TO WAIT FOR\n");
-    }
-
-    if (WIFSIGNALED(status)) {
-      printf("ERROR: killed by signal %d\n", WTERMSIG(status));
-    } else if (WIFSTOPPED(status)) {
-      printf("ERROR: stopped by signal %d\n", WSTOPSIG(status));
-    } else if (WIFCONTINUED(status)) {
-      printf("WTF: continued\n");
-    }
-    
-    print_usage(pid, command, is_background, start_time);
-
-    freeargs(argv);
-    exit(EXIT_SUCCESS);
-  }
-}
-
 void execute(char* command, char **argv, const bool is_background)
 {
   pid_t pid;
   int status;
-  
+
+  struct timeval start_time;
+  gettimeofday(&start_time, 0);
+
   pid = fork();
 
   if (pid == 0)
   {
-    execute_then_free(command, argv, is_background);
+    execute_and_exit(command, argv);
   } else {
     if (is_background) {
       printf("[PID: %d] Running '%s' in the background.\n", pid, command);
+    } else {
+      /* foreground */
+      waitpid(pid, &status, WUNTRACED);
+      print_usage(pid, command, start_time);
     }
 
-    if(!is_background && waitpid(pid, &status, WUNTRACED) == -1) {
-      printf("ERROR: expected to wait for child process\n");
-    }
     freeargs(argv);
   }
 }
@@ -200,7 +164,6 @@ int main(int argc, char **argv, char **envp)
   bool is_background_process;
   const size_t input_length = 71;
 
-  printf("Shell pid: %d\n", getpid());
   while (1) {
     prompt(input, input_length);
     is_background_process = ends_with_ampersand(input);
