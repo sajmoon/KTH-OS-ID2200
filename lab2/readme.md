@@ -24,3 +24,4 @@ Background:
 Built in commands:
 - cd
 - exit
+- Get env
