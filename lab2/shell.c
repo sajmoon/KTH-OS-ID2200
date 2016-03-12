@@ -111,6 +111,7 @@ void execute_and_exit(char* command, char** argv)
 {
   execvp(command, argv);
   printf("Unknown or invalid command: %s\n", command);
+  freeargs(argv);
   _exit(EXIT_FAILURE);
 }
 
