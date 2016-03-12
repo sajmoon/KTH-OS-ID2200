@@ -47,7 +47,7 @@ void handle_zombies()
   do {
     pid = waitpid(-1, &status, WNOHANG);
     if (pid > 0) {
-      printf("Background job pid [%d] has finished. Removing zombie.\n", pid);
+      printf("Background job pid [%d] has finished.\n", pid);
     }
   } while (pid > 0);
 }
@@ -135,7 +135,6 @@ void execute(char* command, char **argv, const bool is_background)
       waitpid(pid, &status, WUNTRACED);
       print_usage(pid, command, start_time);
     }
-
     freeargs(argv);
   }
 }
