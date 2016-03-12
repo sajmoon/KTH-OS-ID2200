@@ -144,7 +144,7 @@ EXECUTE_STATUS builtin(char* command, char** args)
 {
   if(strcmp(command, "exit") == 0)
   {
-    printf("%s>> %sBye..", KYEL, KNRM);
+    printf("%s>> %sBye..\n", KYEL, KNRM);
     freeargs(args);
     exit(EXIT_SUCCESS);
   }
