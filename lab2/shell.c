@@ -152,6 +152,7 @@ EXECUTE_STATUS builtin(char* command, char** args)
   if (strcmp(command, "cd") == 0)
   {
     chdir(args[1]);
+    freeargs(args);
     return SKIP_EXECUTE;
   }
 

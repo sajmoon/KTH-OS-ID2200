@@ -26,4 +26,4 @@ Built in commands:
 # Stuff left to do:
 - Memmoryleak for unkown command
 - Print Env
-- Memoryleak while changing directories. cd .. loses 48bytes.
+- [DONE] Memoryleak while changing directories. cd .. loses 48bytes.
