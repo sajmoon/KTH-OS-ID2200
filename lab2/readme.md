@@ -1,8 +1,4 @@
-# Docker stuff:
-docker build -t os-lab2 . && docker run -it --rm --name oslab os-lab2
-
 # Requirements
-
 - "exit" works
 - background and foreground processes
 - Error messages
@@ -27,6 +23,6 @@ Built in commands:
 - exit
 - Get env
 
-Stuff left to do:
+# Stuff left to do:
 - Memmoryleak for unkown command
 - Print Env
