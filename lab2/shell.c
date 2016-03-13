@@ -34,7 +34,7 @@ void print_usage(const pid_t pid, const char* command, struct timeval start_time
   gettimeofday(&end_time, 0);
 
   printf("Pid: %d finished command '%s' in", pid, command);
-  printf(" %ld.%06lds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
+  printf(" %ld.%06ds\n", end_time.tv_sec - start_time.tv_sec, end_time.tv_usec - start_time.tv_usec);
 
   fflush(stdout);
 }
