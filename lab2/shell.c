@@ -61,8 +61,6 @@ void prompt(char* input, const int input_length)
 
   } while(strcmp(input, "\n") == 0);
 
-  handle_zombies();
-
   strtok(input, "\n"); /* does not strip on string with only \n in it. */
 }
 
@@ -188,7 +186,7 @@ int main(int argc, char **argv, char **envp)
     if(builtin(args[0], args) == NORMAL_EXECUTE) {
       execute(args[0], args, is_background_process);
     }
-
+    handle_zombies();
   }
 
   return 0;
