@@ -9,21 +9,17 @@ Termination of processes
 - Polling status of child proccees (wait()/waitpid())
 - Signalhandling
 
-Foreground:
+Foreground and Background:
 - print pid on start
-- print pid on completion
 - echo execution time
-
-Background:
-- echo pid on create
-- echo pid on exit (on next terminal input)
+- echo pid on exit (on next terminal input for background)
 
 Built in commands:
 - cd
 - exit
-- Get env
+- digenv
 
 # Stuff left to do:
-- Memmoryleak for unkown command
+- [WON'T FIX: Mac only] Memmoryleak for unkown command
 - Print Env
 - [DONE] Memoryleak while changing directories. cd .. loses 48bytes.
