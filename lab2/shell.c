@@ -154,6 +154,21 @@ EXECUTE_STATUS builtin(char* command, char** args)
     chdir(args[1]);
     return SKIP_EXECUTE;
   }
+
+  if (strcmp(command, "digenv") == 0)
+  {
+    char* path;
+    printf("Execute lab1\n");
+    path = getenv ("DIGENV_PATH");
+    if (path == NULL) {
+      printf("###### ERROR #######\n");
+      printf("Could not find executable\n");
+      printf("Make sure DIGENV_PATH is set to a valid binary\n");
+    } else {
+      execute(path, args, false);
+    }
+    return SKIP_EXECUTE;
+  }
   return NORMAL_EXECUTE;
 }
 
