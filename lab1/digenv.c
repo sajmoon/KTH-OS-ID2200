@@ -96,8 +96,7 @@ void wait_for_child_to_terminate() {
     if we define parameters digenv works as:
     ./digenv [params] -> printenv | grep params | sort | less
  */
-int main(int argc, char **argv, char **envp)
-{
+int digenv(int argc, char **argv, char **envp) {
     /* true for childprocesses after each fork */
     bool isChild;
 
@@ -159,4 +158,12 @@ int main(int argc, char **argv, char **envp)
     perror("Invalid pager"); 
     _exit(EXIT_FAILURE);
     return EXIT_FAILURE;
+
 }
+
+#if DIGENV_MAIN
+int main(int argc, char **argv, char **envp)
+{
+  return digenv(argc, argv, envp);
+}
+#endif
