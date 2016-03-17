@@ -8,6 +8,8 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 
+#include "../lab1/digenv.c"
+
 #define EXECUTE_STATUS bool
 #define SKIP_EXECUTE false
 #define NORMAL_EXECUTE true
@@ -105,6 +107,23 @@ void freeargs(char** args)
   free(args);
 }
 
+void exec_digenv(char **args) {
+  int pid;
+  pid = fork();
+  if(pid == 0){
+    int argc = 0;
+    for(; args[argc] != NULL; argc++)
+      ;
+
+    printf("argc %d\n", argc);
+    digenv(argc, args, NULL);
+  } else {
+    int status;
+    waitpid(pid, &status, WUNTRACED);
+    freeargs(args);
+  }
+}
+
 void execute_and_exit(char* command, char** argv)
 {
   execvp(command, argv);
@@ -151,6 +170,11 @@ EXECUTE_STATUS builtin(char* command, char** args)
   {
     chdir(args[1]);
     freeargs(args);
+    return SKIP_EXECUTE;
+  }
+
+  if(strcmp(command, "digenv") == 0) {
+    exec_digenv(args);
     return SKIP_EXECUTE;
   }
 
