@@ -6,20 +6,22 @@
 - Do not exit shell if foreground job is canceled with ctrl-c
 
 Termination of processes
-- Polling status of child proccees (wait()/waitpid())
-- Signalhandling
+- [CHECK] Polling status of child proccees (wait()/waitpid())
+- [CHECK] Signalhandling
 
 Foreground and Background:
-- print pid on start
-- echo execution time
-- echo pid on exit (on next terminal input for background)
+- [CHECK] print pid on start
+- [CHECK] echo execution time
+- [CHECK] echo pid on exit (on next terminal input for background)
 
 Built in commands:
-- cd
-- exit
-- digenv
+- [CHECK] cd
+- [CHECK] exit
+- [CHECK] digenv
 
 # Stuff left to do:
 - [WON'T FIX: Mac only] Memmoryleak for unkown command
-- Print Env
+- [DONE] Print Env
 - [DONE] Memoryleak while changing directories. cd .. loses 48bytes.
+- Do not exit shell if foreground job is canceled with ctrl-c
+    i.e. "sleep 2", then ^C
