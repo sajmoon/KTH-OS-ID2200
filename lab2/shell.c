@@ -115,7 +115,6 @@ void exec_digenv(char **args) {
     for(; args[argc] != NULL; argc++)
       ;
 
-    printf("argc %d\n", argc);
     digenv(argc, args, NULL);
   } else {
     int status;
