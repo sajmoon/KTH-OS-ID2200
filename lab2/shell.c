@@ -144,6 +144,10 @@ void execute(char* command, char **argv, const bool is_background)
 
   if (pid == 0)
   {
+    if(is_background)
+      /* background processes ignore interrupts. */
+      signal(SIGINT, SIG_IGN);
+
     execute_and_exit(command, argv);
   } else {
     if (is_background) {
