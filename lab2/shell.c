@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -194,6 +195,12 @@ EXECUTE_STATUS builtin(char* command, char** args)
   return NORMAL_EXECUTE;
 }
 
+void interrupt_handler(int signal)
+{
+  printf("\n");
+  print_prompt();
+}
+
 int main(int argc, char **argv, char **envp)
 {
   char **args;
@@ -201,6 +208,8 @@ int main(int argc, char **argv, char **envp)
   bool is_background_process;
   const size_t input_length = 71;
 
+  signal(SIGINT, interrupt_handler);
+  
   while (1) {
     prompt(input, input_length);
     is_background_process = ends_with_ampersand(input);
