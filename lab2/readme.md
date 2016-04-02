@@ -23,5 +23,5 @@ Built in commands:
 - [WON'T FIX: Mac only] Memmoryleak for unkown command
 - [DONE] Print Env
 - [DONE] Memoryleak while changing directories. cd .. loses 48bytes.
-- Do not exit shell if foreground job is canceled with ctrl-c
+- [DONE] Do not exit shell if foreground job is canceled with ctrl-c
     i.e. "sleep 2", then ^C
