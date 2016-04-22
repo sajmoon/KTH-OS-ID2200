@@ -201,13 +201,14 @@ EXECUTE_STATUS builtin(char* command, char** args)
 
 void interrupt_handler(int signal)
 {
-  /* From man-page:
+  /* From man signal(3):
    *  When a process which has installed signal handlers forks, the
    *  child process inherits the signals. All caught signals may be
    *  reset to their default action by a call to the execve(2) function;
    *  ignored signals remain ignored.
    *
-   * Thus, execvp commands can be interrupted, but the shell isn't.
+   * Thus, exec* commands can be interrupted, without affecting the shell,
+   * if the parent process has a signal handler.
    */
   printf("\nUse 'exit' to exit.\n");
   print_prompt();
